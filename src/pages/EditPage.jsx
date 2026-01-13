@@ -25,7 +25,7 @@ export default function EditPage() {
       <Card>
         <CardContent className="p-4">
           <div className="text-lg font-semibold">編集</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">更新内容はローカルに保存されます。</div>
+          <div className="text-sm text-muted-foreground">更新内容はローカルに保存されます。</div>
         </CardContent>
       </Card>
 

@@ -127,7 +127,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
           onChange={(e) => set({ barcode: e.target.value })}
           placeholder="EAN-13 / UPC"
         />
-        <div className="text-xs text-[rgb(var(--muted-fg))]">※ スキャン画面で自動入力もできます</div>
+        <div className="text-xs text-muted-foreground">※ スキャン画面で自動入力もできます</div>
       </div>
 
       {/* メモ */}
@@ -161,7 +161,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         />
 
         {draft.imageUrl && !draft.imageDataUrl ? (
-          <div className="text-xs text-[rgb(var(--muted-fg))]">
+          <div className="text-xs text-muted-foreground">
             ※ Yahooショッピングから取得した画像です。差し替える場合は下から画像を選択してください。
           </div>
         ) : null}
@@ -170,7 +170,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
           <div className="mt-2 space-y-2">
             <img
               src={draft.imageDataUrl || draft.imageUrl}
-              className="w-full rounded-lg border border-[rgb(var(--border))]"
+              className="w-full rounded-lg border border-border"
               alt="preview"
             />
             <div className="flex gap-2">

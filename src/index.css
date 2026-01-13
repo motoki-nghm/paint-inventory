@@ -4,38 +4,78 @@
 
 @layer base {
   :root {
-    /* Garage / Graphite theme (Light) */
-    --bg: 248 250 252; /* slate-50 */
-    --fg: 15 23 42; /* slate-900 */
+    /* neutral / blue-gray */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
-    --muted: 241 245 249; /* slate-100 */
-    --muted-fg: 71 85 105; /* slate-600 */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --border: 203 213 225; /* slate-300 */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 51 65 85; /* slate-700 (工具感の主役) */
-    --primary-fg: 255 255 255;
+    /* primary: blue-gray */
+    --primary: 215 28% 17%;
+    --primary-foreground: 210 40% 98%;
 
-    --danger: 185 28 28; /* red-700 */
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 214 32% 93%;
+    --muted-foreground: 215 16% 40%;
+
+    --accent: 214 32% 91%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+
+    /* focus ring: muted blue */
+    --ring: 213 27% 40%;
+
+    --radius: 0.75rem;
   }
 
   .dark {
-    --bg: 2 6 23; /* 背景は今のまま */
-    --fg: 226 232 240;
+    --background: 222 47% 7%;
+    --foreground: 210 40% 98%;
 
-    --muted: 15 23 42;
-    --muted-fg: 148 163 184;
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
 
-    --border: 30 41 59;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
 
-    /* ★ここを変更 */
-    --primary: 226 232 240; /* slate-200 */
-    --primary-fg: 2 6 23; /* 背景色 */
+    /* primary: slightly brighter in dark */
+    --primary: 210 40% 98%;
+    --primary-foreground: 222 47% 11%;
 
-    --danger: 248 113 113;
+    --secondary: 217 28% 14%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 28% 14%;
+    --muted-foreground: 215 20% 70%;
+
+    --accent: 217 28% 14%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 28% 16%;
+    --input: 217 28% 16%;
+
+    /* focus ring: subtle blue */
+    --ring: 213 27% 65%;
   }
 
+  * {
+    @apply border-border;
+  }
   body {
-    @apply bg-[rgb(var(--bg))] text-[rgb(var(--fg))];
+    @apply bg-background text-foreground;
   }
 }

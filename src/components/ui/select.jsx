@@ -11,7 +11,7 @@ export function SelectTrigger({ className, children }) {
   return (
     <div
       className={cn(
-        "h-10 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--bg))] px-3 text-sm",
+        "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm",
         "flex items-center justify-between",
         className
       )}
@@ -24,7 +24,7 @@ export function SelectTrigger({ className, children }) {
 export function SelectValue({ placeholder }) {
   const ctx = useContext(Ctx);
   return (
-    <span className={cn("truncate", !ctx?.value ? "text-[rgb(var(--muted-fg))]" : "")}>
+    <span className={cn("truncate", !ctx?.value ? "text-muted-foreground" : "")}>
       {ctx?.value ? ctx.value : placeholder}
     </span>
   );
@@ -48,7 +48,7 @@ export function SelectContent({ className, children }) {
   return (
     <select
       className={cn(
-        "mt-1 h-10 w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--bg))] px-3 text-sm outline-none",
+        "mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none",
         className
       )}
       value={ctx?.value ?? ""}

@@ -99,7 +99,7 @@ export default function ScanAdd({ onSave, onCancel }) {
 
       <Card>
         <CardContent className="p-3 space-y-3">
-          <div className="relative overflow-hidden rounded-lg border border-[rgb(var(--border))] bg-black">
+          <div className="relative overflow-hidden rounded-lg border border-border bg-black">
             <video ref={videoRef} className="h-[260px] w-full object-cover" muted playsInline />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="h-40 w-64 rounded-lg border-2 border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />

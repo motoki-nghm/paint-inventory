@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export const Textarea = React.forwardRef(function Textarea({ className, ...props }, ref) {
@@ -6,8 +6,9 @@ export const Textarea = React.forwardRef(function Textarea({ className, ...props
     <textarea
       ref={ref}
       className={cn(
-        "min-h-[100px] w-full rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--bg))] p-3 text-sm outline-none",
-        "focus:ring-2 focus:ring-[rgb(var(--fg))]/20",
+        "min-h-[100px] w-full rounded-lg border border-border bg-background p-3 text-sm outline-none",
+        "placeholder:text-muted-foreground",
+        "focus-visible:ring-2 focus-visible:ring-ring/40",
         className
       )}
       {...props}

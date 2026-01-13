@@ -8,28 +8,33 @@ export default function PaintCard({ item }) {
 
   return (
     <Link to={`/item/${item.id}`} className="block">
-      <Card className="hover:brightness-105">
+      <Card className="transition hover:brightness-[1.02]">
         <CardContent className="p-3 flex gap-3">
-          <div className="w-16 h-16 shrink-0 rounded-lg border border-[rgb(var(--border))] overflow-hidden bg-[rgb(var(--muted))] flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+          <div className="w-16 h-16 shrink-0 rounded-lg border border-border overflow-hidden bg-muted flex items-center justify-center shadow-sm">
             {thumb ? (
               <img src={thumb} alt={item.name} className="w-full h-full object-cover" />
             ) : (
-              <ImageIcon className="w-6 h-6 text-[rgb(var(--muted-fg))]" />
+              <ImageIcon className="w-6 h-6 text-muted-foreground" />
             )}
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="font-medium truncate">{item.name}</div>
 
-            <div className="mt-1 flex flex-wrap gap-1 items-center">
-              {item.brand ? <span className="text-xs text-[rgb(var(--muted-fg))]">{item.brand}</span> : null}
-              {item.color ? <span className="text-xs text-[rgb(var(--muted-fg))]">/ {item.color}</span> : null}
+            <div className="mt-1 flex flex-wrap gap-1 items-center text-xs text-muted-foreground">
+              {item.brand ? <span>{item.brand}</span> : null}
+              {item.color ? (
+                <span>
+                  {item.brand ? "/ " : ""}
+                  {item.color}
+                </span>
+              ) : null}
             </div>
 
             <div className="mt-2 flex gap-2 items-center">
               <Badge variant="secondary">{item.type || "other"}</Badge>
               {typeof item.qty === "number" ? (
-                <span className="text-xs text-[rgb(var(--muted-fg))]">在庫: {item.qty}</span>
+                <span className="text-xs text-muted-foreground">在庫: {item.qty}</span>
               ) : null}
             </div>
           </div>

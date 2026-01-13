@@ -1,33 +1,24 @@
-import React from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const variants = {
-  default: "bg-[rgb(var(--primary))] text-[rgb(var(--primary-fg))] hover:opacity-90",
-  secondary: "bg-[rgb(var(--muted))] text-[rgb(var(--fg))] hover:opacity-90 border border-[rgb(var(--border))]",
-  ghost: "bg-transparent hover:bg-[rgb(var(--muted))]",
-  danger: "bg-[rgb(var(--danger))] text-white hover:opacity-90",
+  default: "bg-primary text-primary-foreground hover:opacity-90",
+  secondary: "bg-secondary text-secondary-foreground hover:opacity-90 border border-border",
+  ghost: "bg-transparent hover:bg-muted",
+  danger: "bg-destructive text-destructive-foreground hover:opacity-90",
 };
 
-const sizes = {
-  default: "h-10 px-2 text-sm",
-  icon: "h-10 w-10 p-0",
-};
-
-export const Button = React.forwardRef(function Button(
-  { className, variant = "default", size = "default", type = "button", ...props },
-  ref
-) {
+export function Button({ className, variant = "default", ...props }) {
   return (
     <button
-      ref={ref}
-      type={type}
       className={cn(
-        "inline-flex items-center justify-center rounded-lg font-medium transition active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none",
+        "inline-flex items-center justify-center rounded-lg px-3 h-10 text-sm font-medium transition",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        "disabled:opacity-50 disabled:pointer-events-none",
         variants[variant] || variants.default,
-        sizes[size] || sizes.default,
         className
       )}
       {...props}
     />
   );
-});
+}

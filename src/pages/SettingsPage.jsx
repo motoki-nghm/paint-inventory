@@ -21,16 +21,16 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="p-4 space-y-2">
           <div className="text-lg font-semibold">設定</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">JSON インポート/エクスポート、全消去</div>
+          <div className="text-sm text-muted-foreground">JSON インポート/エクスポート、全消去</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="font-semibold">エクスポート（JSON）</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">以下をコピーして保存できます。</div>
+          <div className="text-sm text-muted-foreground">以下をコピーして保存できます。</div>
           <textarea
-            className="w-full h-44 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--bg))] p-3 text-xs"
+            className="w-full h-44 rounded-lg border border-border bg-[rgb(var(--bg))] p-3 text-xs"
             readOnly
             value={exportJson}
           />
@@ -48,9 +48,7 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="font-semibold">インポート（JSON）</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">
-            {`{ "paints": [...] }`} 形式のJSONを貼り付けてください。
-          </div>
+          <div className="text-sm text-muted-foreground">{`{ "paints": [...] }`} 形式のJSONを貼り付けてください。</div>
           <ImportBox
             onImport={(text) => {
               const parsed = safeJsonParse(text);
@@ -74,7 +72,7 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="p-4 space-y-3">
           <div className="font-semibold text-[rgb(var(--danger))]">危険：データ全消去</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">IndexedDB 内の保存データを削除します。</div>
+          <div className="text-sm text-muted-foreground">IndexedDB 内の保存データを削除します。</div>
           <Button
             variant="danger"
             onClick={async () => {
@@ -93,10 +91,9 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="p-4 space-y-2">
           <div className="font-semibold">環境変数（任意）</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">
-            UPCItemDB を使う場合は{" "}
-            <code className="px-1 py-0.5 rounded bg-[rgb(var(--muted))]">VITE_UPCITEMDB_KEY</code> を設定してください。
-            未設定でも Open Food Facts → 失敗時は手入力で保存できます。
+          <div className="text-sm text-muted-foreground">
+            UPCItemDB を使う場合は <code className="px-1 py-0.5 rounded bg-muted-foreground">VITE_UPCITEMDB_KEY</code>{" "}
+            を設定してください。 未設定でも Open Food Facts → 失敗時は手入力で保存できます。
           </div>
         </CardContent>
       </Card>
@@ -109,7 +106,7 @@ function ImportBox({ onImport }) {
   return (
     <div className="space-y-2">
       <textarea
-        className="w-full h-44 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--bg))] p-3 text-xs"
+        className="w-full h-44 rounded-lg border border-border bg-[rgb(var(--bg))] p-3 text-xs"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder='{"paints":[...]}'

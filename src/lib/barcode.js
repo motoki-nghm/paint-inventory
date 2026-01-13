@@ -4,6 +4,22 @@ function isSecureContextOk() {
   return window.isSecureContext || location.hostname === "localhost";
 }
 
+const VIDEO_HINTS = {
+  facingMode: { ideal: "environment" },
+  width: { ideal: 1280 },
+  height: { ideal: 720 },
+};
+
+async function tryEnableContinuousFocus(stream) {
+  try {
+    const track = stream?.getVideoTracks?.()[0];
+    const caps = track?.getCapabilities?.();
+    if (caps?.focusMode?.includes?.("continuous")) {
+      await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+    }
+  } catch {}
+}
+
 export async function startBarcodeScan({ video, onResult, onError, repeatGuardMs = 1500 }) {
   if (!isSecureContextOk()) {
     onError?.("カメラは HTTPS（または localhost）でのみ利用できます。Vercel 等にデプロイしてお試しください。");
@@ -41,11 +57,13 @@ export async function startBarcodeScan({ video, onResult, onError, repeatGuardMs
   if (hasNative) {
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: VIDEO_HINTS,
         audio: false,
       });
       video.srcObject = stream;
       await video.play();
+
+      await tryEnableContinuousFocus(stream);
 
       const detector = new window.BarcodeDetector({
         formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "qr_code"],
@@ -89,7 +107,7 @@ export async function startBarcodeScan({ video, onResult, onError, repeatGuardMs
     zxingControls = await reader.decodeFromConstraints(
       {
         audio: false,
-        video: { facingMode: { ideal: "environment" } },
+        video: VIDEO_HINTS,
       },
       video,
       (result, err) => {

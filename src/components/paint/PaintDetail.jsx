@@ -10,7 +10,7 @@ export default function PaintDetail({ item }) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-lg font-semibold leading-snug">{item.name}</div>
-              <div className="mt-1 text-sm text-[rgb(var(--muted-fg))]">
+              <div className="mt-1 text-sm text-muted-foreground">
                 {item.brand ? item.brand : "ブランド未設定"}
                 {item.color ? ` • ${item.color}` : ""}
               </div>
@@ -24,19 +24,19 @@ export default function PaintDetail({ item }) {
 
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
-              <div className="text-xs text-[rgb(var(--muted-fg))]">容量</div>
+              <div className="text-xs text-muted-foreground">容量</div>
               <div>{item.capacity || "-"}</div>
             </div>
             <div>
-              <div className="text-xs text-[rgb(var(--muted-fg))]">所持数</div>
+              <div className="text-xs text-muted-foreground">所持数</div>
               <div>{typeof item.qty === "number" ? item.qty : "-"}</div>
             </div>
             <div className="col-span-2">
-              <div className="text-xs text-[rgb(var(--muted-fg))]">バーコード</div>
+              <div className="text-xs text-muted-foreground">バーコード</div>
               <div className="break-all">{item.barcode || "-"}</div>
             </div>
             <div className="col-span-2">
-              <div className="text-xs text-[rgb(var(--muted-fg))]">購入日</div>
+              <div className="text-xs text-muted-foreground">購入日</div>
               <div>{item.purchasedAt || "-"}</div>
             </div>
           </div>
@@ -45,7 +45,7 @@ export default function PaintDetail({ item }) {
             <>
               <Separator />
               <div>
-                <div className="text-xs text-[rgb(var(--muted-fg))]">メモ</div>
+                <div className="text-xs text-muted-foreground">メモ</div>
                 <div className="text-sm whitespace-pre-wrap">{item.note}</div>
               </div>
             </>
@@ -56,7 +56,7 @@ export default function PaintDetail({ item }) {
       {item.imageDataUrl ? (
         <Card>
           <CardContent className="p-3">
-            <img src={item.imageDataUrl} className="w-full rounded-lg border border-[rgb(var(--border))]" />
+            <img src={item.imageDataUrl} className="w-full rounded-lg border border-border" />
           </CardContent>
         </Card>
       ) : null}

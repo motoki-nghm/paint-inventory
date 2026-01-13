@@ -13,7 +13,7 @@ export default function AddPage() {
       <Card>
         <CardContent className="p-4">
           <div className="text-lg font-semibold">手入力で追加</div>
-          <div className="text-sm text-[rgb(var(--muted-fg))]">商品名は必須。その他は任意です。</div>
+          <div className="text-sm text-muted-foreground">商品名は必須。その他は任意です。</div>
         </CardContent>
       </Card>
 

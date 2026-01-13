@@ -1,15 +1,11 @@
-import React from "react";
 import { cn } from "@/lib/utils";
 
-export function Badge({ className, variant = "default", ...props }) {
-  const v =
+export function Badge({ className, variant = "secondary", ...props }) {
+  const base = "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium border";
+  const styles =
     variant === "secondary"
-      ? "bg-[rgb(var(--muted))] text-[rgb(var(--fg))] border border-[rgb(var(--border))]"
-      : "bg-[rgb(var(--primary))] text-[rgb(var(--primary-fg))]";
-  return (
-    <span
-      className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold", v, className)}
-      {...props}
-    />
-  );
+      ? "bg-muted text-foreground border-border"
+      : "bg-primary text-primary-foreground border-transparent";
+
+  return <span className={cn(base, styles, className)} {...props} />;
 }

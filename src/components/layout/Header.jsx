@@ -20,16 +20,16 @@ export default function Header() {
   }, [theme]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]/90 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <Container className="py-3">
         <div className="flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-[rgb(var(--muted))] flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
               <span className="text-sm font-bold">P</span>
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold">Paint Inventory</div>
-              <div className="text-xs text-[rgb(var(--muted-fg))]">ローカル管理</div>
+              <div className="text-xs text-muted-foreground">ローカル管理</div>
             </div>
           </Link>
 

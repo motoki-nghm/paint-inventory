@@ -17,6 +17,8 @@ export default function DetailPage() {
   if (!item) {
     return (
       <Container className="space-y-3">
+        <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(item, null, 2)}</pre>
+
         <Alert variant="danger">データが見つかりませんでした。</Alert>
         <Link to="/">
           <Button className="w-full">一覧へ</Button>
