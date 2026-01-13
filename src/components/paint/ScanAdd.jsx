@@ -16,6 +16,7 @@ export default function ScanAdd({ onSave, onCancel }) {
   const [lookupSource, setLookupSource] = useState("");
   const [status, setStatus] = useState("idle"); // idle|scanning|found|lookup|ready|error
   const [message, setMessage] = useState("");
+  const [lookupImageUrl, setLookupImageUrl] = useState("");
 
   const hint = useMemo(() => {
     if (status === "scanning") return "バーコードを枠内に合わせてください。連続検出は自動で抑制します。";
