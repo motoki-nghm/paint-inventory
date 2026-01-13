@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { PAINT_TYPES } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,10 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    setDraft(initial);
+  }, [initial]);
+
   const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
 
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
@@ -30,7 +34,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
       {hint ? <Alert>{hint}</Alert> : null}
       {error ? <Alert variant="danger">{error}</Alert> : null}
 
-      <div className="space-y-2">
+      <div className="mx-auto w-full max-w-sm px-4 space-y-3">
         <label className="text-sm font-medium">商品名（必須）</label>
         <Input
           value={draft.name}
