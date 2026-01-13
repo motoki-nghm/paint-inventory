@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import ScanAdd from "@/components/paint/ScanAdd";
 import { usePaints } from "@/lib/PaintsProvider";
+import { Container } from "@/components/layout/Container";
 
 export default function ScanPage() {
   const nav = useNavigate();
