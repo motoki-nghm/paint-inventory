@@ -7,6 +7,15 @@ import { loadState } from "@/lib/storage";
  * 2) Yahoo（/api/yahoo-lookup）
  * 3) null（＝手入力）
  */
+function normalizeImageUrl(url) {
+  if (!url) return "";
+  let u = String(url).trim();
+  if (!u) return "";
+  if (u.startsWith("//")) u = "https:" + u;
+  if (u.startsWith("http://")) u = "https://" + u.slice(7);
+  return u;
+}
+
 export async function productLookup(barcode) {
   const code = String(barcode || "").trim();
   if (!code) return null;
@@ -19,8 +28,8 @@ export async function productLookup(barcode) {
     if (hit?.name?.trim()) {
       return {
         name: hit.name.trim(),
-        imageUrl: hit.imageUrl || "",
-        source: "local",
+        imageUrl: normalizeImageUrl(data.imageUrl),
+        source: "Yahoo Shopping",
       };
     }
   } catch {
