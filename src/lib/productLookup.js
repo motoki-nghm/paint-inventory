@@ -1,49 +1,46 @@
-const UPCITEMDB_KEY = import.meta.env.VITE_UPCITEMDB_KEY;
+import { loadState } from "@/lib/storage";
 
-async function lookupUpcItemDb(barcode) {
-  if (!UPCITEMDB_KEY) return null;
-
-  const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`;
-  const res = await fetch(url, {
-    headers: {
-      "Content-Type": "application/json",
-      key: UPCITEMDB_KEY,
-    },
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const title = data?.items?.[0]?.title;
-  if (title && title.trim()) return { name: title.trim(), source: "upcitemdb" };
-  return null;
-}
-
-async function lookupOpenFoodFacts(barcode) {
-  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const data = await res.json();
-  const name = data?.product?.product_name || data?.product?.product_name_en || data?.product?.generic_name;
-  if (name && name.trim()) return { name: name.trim(), source: "openfoodfacts" };
-  return null;
-}
-
+/**
+ * barcode -> { name, imageUrl, source } or null
+ * 優先順位:
+ * 1) ローカル（過去に保存したJAN一致）
+ * 2) Yahoo（/api/yahoo-lookup）
+ * 3) null（＝手入力）
+ */
 export async function productLookup(barcode) {
-  const code = String(barcode ?? "").trim();
+  const code = String(barcode || "").trim();
   if (!code) return null;
 
+  // 1) ローカル辞書（保存済みデータ）を優先
   try {
-    const a = await lookupUpcItemDb(code);
-    if (a) return a;
+    const state = await loadState();
+    const hit = state?.paints?.find((p) => String(p?.barcode || "").trim() === code);
+
+    if (hit?.name?.trim()) {
+      return {
+        name: hit.name.trim(),
+        imageUrl: hit.imageUrl || "",
+        source: "local",
+      };
+    }
   } catch {
-    // fallback
+    // ローカル読み取り失敗は無視して次へ
   }
 
+  // 2) Yahoo（Vercel Function経由）
   try {
-    const b = await lookupOpenFoodFacts(code);
-    if (b) return b;
-  } catch {
-    // fallback
-  }
+    const res = await fetch(`/api/yahoo-lookup?barcode=${encodeURIComponent(code)}`);
+    if (!res.ok) return null;
 
-  return null;
+    const data = await res.json();
+    if (!data?.ok || !data?.found) return null;
+
+    return {
+      name: data.name || "",
+      imageUrl: data.imageUrl || "",
+      source: "Yahoo Shopping",
+    };
+  } catch {
+    return null;
+  }
 }

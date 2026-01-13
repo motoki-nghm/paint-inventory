@@ -133,13 +133,28 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
             }
           }}
         />
-        {draft.imageDataUrl ? (
+        {draft.imageUrl && !draft.imageDataUrl ? (
+          <div className="text-xs text-[rgb(var(--muted-fg))]">
+            ※ Yahooショッピングから取得した画像です。差し替える場合は下から画像を選択してください。
+          </div>
+        ) : null}
+
+        {draft.imageDataUrl || draft.imageUrl ? (
           <div className="mt-2">
-            <img src={draft.imageDataUrl} className="w-full rounded-lg border border-[rgb(var(--border))]" />
-            <div className="mt-2">
-              <Button variant="secondary" onClick={() => set({ imageDataUrl: undefined })}>
-                画像を削除
-              </Button>
+            <img
+              src={draft.imageDataUrl || draft.imageUrl}
+              className="w-full rounded-lg border border-[rgb(var(--border))]"
+            />
+            <div className="mt-2 flex gap-2">
+              {draft.imageDataUrl ? (
+                <Button variant="secondary" onClick={() => set({ imageDataUrl: undefined })}>
+                  画像を削除
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={() => set({ imageUrl: undefined })}>
+                  Yahoo画像を削除
+                </Button>
+              )}
             </div>
           </div>
         ) : null}

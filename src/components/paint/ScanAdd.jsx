@@ -88,6 +88,7 @@ export default function ScanAdd({ onSave, onCancel }) {
   const initial = {
     barcode: barcode || "",
     name: lookupName || "",
+    imageUrl: lookupImageUrl || "",
   };
 
   return (

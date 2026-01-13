@@ -69,6 +69,7 @@ export function usePaints() {
       barcode: input.barcode?.trim() || undefined,
       purchasedAt: input.purchasedAt || undefined,
       imageDataUrl: input.imageDataUrl || undefined,
+      imageUrl: input.imageUrl || undefined,
     };
     setPaints((prev) => [item, ...prev]);
     return item;
@@ -92,6 +93,7 @@ export function usePaints() {
           type: patch.type ?? p.type,
           imageDataUrl: patch.imageDataUrl ?? p.imageDataUrl,
           updatedAt: now(),
+          imageUrl: patch.imageUrl ?? p.imageUrl,
         };
       })
     );

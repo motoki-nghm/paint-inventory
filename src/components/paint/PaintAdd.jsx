@@ -11,6 +11,7 @@ export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint }) {
     qty: 1,
     barcode: "",
     purchasedAt: "",
+    imageUrl: undefined,
     imageDataUrl: undefined,
     ...initial,
   };
