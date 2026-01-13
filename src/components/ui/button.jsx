@@ -9,7 +9,7 @@ const variants = {
 };
 
 const sizes = {
-  default: "h-10 px-4 text-sm",
+  default: "h-10 px-2 text-sm",
   icon: "h-10 w-10 p-0",
 };
 

@@ -21,33 +21,45 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    setDraft(initial);
+  const initialSig = useMemo(() => {
+    return [
+      initial?.id ?? "",
+      initial?.barcode ?? "",
+      initial?.name ?? "",
+      initial?.imageUrl ?? "",
+      initial?.imageDataUrl ? "1" : "0",
+    ].join("|");
   }, [initial]);
 
-  const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
+  useEffect(() => {
+    setDraft(initial);
+  }, [initialSig]);
 
+  const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
 
   return (
-    <div className="space-y-3">
+    <div className="mx-auto w-full max-w-[360px] px-5 py-2 space-y-5">
       {hint ? <Alert>{hint}</Alert> : null}
       {error ? <Alert variant="danger">{error}</Alert> : null}
 
-      <div className="mx-auto w-full max-w-sm px-4 space-y-3">
+      {/* 商品名 */}
+      <div className="space-y-2">
         <label className="text-sm font-medium">商品名（必須）</label>
         <Input
-          value={draft.name}
+          value={draft.name ?? ""}
           onChange={(e) => set({ name: e.target.value })}
           placeholder="例）Mr.カラー C1 ホワイト"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* ブランド / 種類 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">ブランド</label>
           <Input value={draft.brand ?? ""} onChange={(e) => set({ brand: e.target.value })} placeholder="例）GSI" />
         </div>
+
         <div className="space-y-2">
           <label className="text-sm font-medium">種類</label>
           <Select value={draft.type ?? "other"} onValueChange={(v) => set({ type: v })}>
@@ -65,10 +77,15 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* 色 / 容量 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">色</label>
-          <Input value={draft.color ?? ""} onChange={(e) => set({ color: e.target.value })} placeholder="例）White" />
+          <Input
+            value={draft.color ?? ""}
+            onChange={(e) => set({ color: e.target.value })}
+            placeholder="例）白 / White"
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">容量</label>
@@ -80,11 +97,13 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      {/* 所持数 / 購入日 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">所持数</label>
           <Input
             type="number"
+            inputMode="numeric"
             value={typeof draft.qty === "number" ? draft.qty : ""}
             onChange={(e) => {
               const v = e.target.value;
@@ -100,6 +119,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         </div>
       </div>
 
+      {/* バーコード */}
       <div className="space-y-2">
         <label className="text-sm font-medium">バーコード</label>
         <Input
@@ -110,6 +130,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         <div className="text-xs text-[rgb(var(--muted-fg))]">※ スキャン画面で自動入力もできます</div>
       </div>
 
+      {/* メモ */}
       <div className="space-y-2">
         <label className="text-sm font-medium">メモ</label>
         <Textarea
@@ -121,6 +142,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
 
       <Separator />
 
+      {/* 画像 */}
       <div className="space-y-2">
         <label className="text-sm font-medium">画像（任意）</label>
         <Input
@@ -137,6 +159,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
             }
           }}
         />
+
         {draft.imageUrl && !draft.imageDataUrl ? (
           <div className="text-xs text-[rgb(var(--muted-fg))]">
             ※ Yahooショッピングから取得した画像です。差し替える場合は下から画像を選択してください。
@@ -144,12 +167,13 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         ) : null}
 
         {draft.imageDataUrl || draft.imageUrl ? (
-          <div className="mt-2">
+          <div className="mt-2 space-y-2">
             <img
               src={draft.imageDataUrl || draft.imageUrl}
               className="w-full rounded-lg border border-[rgb(var(--border))]"
+              alt="preview"
             />
-            <div className="mt-2 flex gap-2">
+            <div className="flex gap-2">
               {draft.imageDataUrl ? (
                 <Button variant="secondary" onClick={() => set({ imageDataUrl: undefined })}>
                   画像を削除
@@ -164,7 +188,8 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         ) : null}
       </div>
 
-      <div className="pt-2 flex gap-2">
+      {/* ボタン（スマホは縦並びで押しやすく） */}
+      <div className="pt-2 flex flex-col sm:flex-row gap-2">
         <Button
           className="w-full"
           disabled={!canSave}
@@ -179,6 +204,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
         >
           {submitLabel}
         </Button>
+
         {onCancel ? (
           <Button variant="secondary" className="w-full" onClick={onCancel}>
             キャンセル
