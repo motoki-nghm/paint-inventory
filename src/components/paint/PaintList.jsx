@@ -1,5 +1,6 @@
 import PaintCard from "@/components/paint/PaintCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { COLOR_PRESETS } from "@/lib/db";
 
 function groupLabel(groupBy, key) {
   if (!key) return "未設定";
@@ -8,8 +9,14 @@ function groupLabel(groupBy, key) {
 
 function getGroupKey(item, groupBy) {
   if (groupBy === "type") return item.type || "other";
-  if (groupBy === "color") return (item.color || "").trim() || "未設定";
   if (groupBy === "brand") return (item.brand || "").trim() || "未設定";
+
+  if (groupBy === "color") {
+    const c = (item.color || "").trim();
+    if (!c) return "未設定";
+    return COLOR_PRESETS.includes(c) ? c : "（手入力の色）";
+  }
+
   return "未設定";
 }
 

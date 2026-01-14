@@ -1,5 +1,4 @@
 import { useMemo, useState, useEffect } from "react";
-import { PAINT_TYPES } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
 import { clamp } from "@/lib/utils";
+import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS, COLOR_PRESETS } from "@/lib/db";
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -54,7 +54,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
       </div>
 
       {/* ブランド / 種類 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-2">
           <label className="text-sm font-medium">ブランド</label>
           <Input value={draft.brand ?? ""} onChange={(e) => set({ brand: e.target.value })} placeholder="例）GSI" />
@@ -75,17 +75,62 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">系統</label>
+          <Select value={draft.system ?? "unknown"} onValueChange={(v) => set({ system: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="系統" />
+            </SelectTrigger>
+            <SelectContent>
+              {PAINT_SYSTEMS.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {PAINT_SYSTEM_LABELS[s] ?? s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* 色 / 容量 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">色</label>
-          <Input
-            value={draft.color ?? ""}
-            onChange={(e) => set({ color: e.target.value })}
-            placeholder="例）白 / White"
-          />
+          <Select
+            value={COLOR_PRESETS.includes(draft.color ?? "") ? draft.color ?? "" : "custom"}
+            onValueChange={(v) => {
+              if (v === "custom") {
+                // カスタム入力へ
+                set({ color: "" });
+              } else {
+                set({ color: v });
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="色を選択" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="custom">（手入力）</SelectItem>
+              {COLOR_PRESETS.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* カスタム入力（プリセットに無い時だけ表示） */}
+          {!COLOR_PRESETS.includes(draft.color ?? "") ? (
+            <Input
+              value={draft.color ?? ""}
+              onChange={(e) => set({ color: e.target.value })}
+              placeholder="例）C1 ホワイト / つや消し黒 / 明るい青"
+            />
+          ) : null}
+
+          <div className="text-xs text-muted-foreground">※ プリセットに無い色は（手入力）で自由に入力できます</div>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">容量</label>

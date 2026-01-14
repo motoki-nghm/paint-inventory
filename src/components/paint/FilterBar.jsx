@@ -1,4 +1,4 @@
-import { PAINT_TYPES } from "@/lib/db";
+import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -34,6 +34,20 @@ export default function FilterBar({ filters, brands, onChange }) {
             {brands.map((b) => (
               <SelectItem key={b} value={b}>
                 {b}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filters.system} onValueChange={(v) => onChange({ ...filters, system: v })}>
+          <SelectTrigger>
+            <SelectValue placeholder="系統" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">すべて</SelectItem>
+            {PAINT_SYSTEMS.map((s) => (
+              <SelectItem key={s} value={s}>
+                {PAINT_SYSTEM_LABELS[s] ?? s}
               </SelectItem>
             ))}
           </SelectContent>

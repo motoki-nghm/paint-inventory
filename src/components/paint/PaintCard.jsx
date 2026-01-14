@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon } from "lucide-react";
+import { PAINT_SYSTEM_LABELS } from "@/lib/db";
 
 export default function PaintCard({ item }) {
   const thumb = item.imageDataUrl || item.imageUrl || "";
@@ -33,6 +34,7 @@ export default function PaintCard({ item }) {
 
             <div className="mt-2 flex gap-2 items-center">
               <Badge variant="secondary">{item.type || "other"}</Badge>
+              {item.system ? <Badge variant="secondary">{PAINT_SYSTEM_LABELS[item.system] ?? "未設定"}</Badge> : null}
               {typeof item.qty === "number" ? (
                 <span className="text-xs text-muted-foreground">在庫: {item.qty}</span>
               ) : null}

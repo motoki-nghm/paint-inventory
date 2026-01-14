@@ -13,6 +13,7 @@ export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint }) {
     purchasedAt: "",
     imageUrl: undefined,
     imageDataUrl: undefined,
+    system: "unknown",
     ...initial,
   };
 

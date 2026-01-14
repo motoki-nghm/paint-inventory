@@ -15,7 +15,14 @@ export function usePaints() {
   useEffect(() => {
     (async () => {
       const state = await loadState();
-      setPaints(state.paints);
+
+      // ✅ system が無い既存データを補完
+      const normalized = (state.paints || []).map((p) => ({
+        system: "unknown",
+        ...p,
+      }));
+
+      setPaints(normalized);
       setLoaded(true);
     })();
   }, []);
@@ -37,6 +44,8 @@ export function usePaints() {
       .filter((p) => {
         if (filters.type !== "all" && p.type !== filters.type) return false;
         if (filters.brand !== "all" && (p.brand ?? "") !== filters.brand) return false;
+        if (filters.system !== "all" && (p.system ?? "unknown") !== filters.system) return false;
+
         if (!q) return true;
         return (
           contains(p.name, q) ||
@@ -70,6 +79,7 @@ export function usePaints() {
       purchasedAt: input.purchasedAt || undefined,
       imageDataUrl: input.imageDataUrl || undefined,
       imageUrl: input.imageUrl || undefined,
+      system: input.system || "unknown",
     };
     setPaints((prev) => [item, ...prev]);
     return item;
@@ -94,6 +104,7 @@ export function usePaints() {
           imageDataUrl: patch.imageDataUrl ?? p.imageDataUrl,
           updatedAt: now(),
           imageUrl: patch.imageUrl ?? p.imageUrl,
+          system: patch.system ?? p.system,
         };
       })
     );
