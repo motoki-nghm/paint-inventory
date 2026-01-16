@@ -1,6 +1,8 @@
 import PaintForm from "@/components/paint/PaintForm";
+import { usePaints } from "@/lib/usePaints";
 
-export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint }) {
+export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint, bindSubmit }) {
+  const { brands } = usePaints();
   const base = {
     name: "",
     brand: "",
@@ -17,5 +19,15 @@ export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint }) {
     ...initial,
   };
 
-  return <PaintForm initial={base} submitLabel="保存する" onSubmit={onSubmit} onCancel={onCancel} hint={hint} />;
+  return (
+    <PaintForm
+      initial={base}
+      submitLabel="保存する"
+      onSubmit={onSubmit}
+      onCancel={onCancel}
+      hint={hint}
+      brandOptions={brands}
+      bindSubmit={bindSubmit}
+    />
+  );
 }

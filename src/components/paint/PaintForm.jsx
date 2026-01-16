@@ -17,9 +17,22 @@ function readFileAsDataUrl(file) {
   });
 }
 
-export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hint }) {
+export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hint, brandOptions = [], bindSubmit }) {
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState(null);
+
+  const handleSubmit = () => {
+    setError(null);
+    if (!String(draft.name ?? "").trim()) {
+      setError("商品名は必須です。");
+      return;
+    }
+    onSubmit({ ...draft, name: String(draft.name).trim() });
+  };
+
+  useEffect(() => {
+    bindSubmit?.(handleSubmit);
+  }, [draft]);
 
   const initialSig = useMemo(() => {
     return [
@@ -56,8 +69,33 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
       {/* ブランド / 種類 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">ブランド</label>
-          <Input value={draft.brand ?? ""} onChange={(e) => set({ brand: e.target.value })} placeholder="例）GSI" />
+          <Select
+            value={brandOptions.includes(draft.brand ?? "") ? draft.brand ?? "" : "custom"}
+            onValueChange={(v) => {
+              if (v === "custom") set({ brand: "" });
+              else set({ brand: v });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="ブランドを選択" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="custom">（手入力）</SelectItem>
+              {brandOptions.map((b) => (
+                <SelectItem key={b} value={b}>
+                  {b}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {!brandOptions.includes(draft.brand ?? "") ? (
+            <Input
+              value={draft.brand ?? ""}
+              onChange={(e) => set({ brand: e.target.value })}
+              placeholder="例）GSI / タミヤ"
+            />
+          ) : null}
         </div>
 
         <div className="space-y-2">

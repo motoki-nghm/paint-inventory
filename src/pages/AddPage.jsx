@@ -1,29 +1,42 @@
-import { useNavigate } from "react-router-dom";
 import Container from "@/components/layout/Container";
+import FixedFooter from "@/components/layout/FixedFooter";
 import PaintAdd from "@/components/paint/PaintAdd";
+import { Button } from "@/components/ui/button";
 import { usePaints } from "@/lib/PaintsProvider";
-import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 export default function AddPage() {
   const nav = useNavigate();
   const { add } = usePaints();
+  const submitRef = useRef(null);
 
-  return (
-    <Container className="space-y-3">
-      <Card>
-        <CardContent className="p-4">
-          <div className="text-lg font-semibold">手入力で追加</div>
-          <div className="text-sm text-muted-foreground">商品名は必須。その他は任意です。</div>
-        </CardContent>
-      </Card>
 
-      <PaintAdd
-        onSubmit={(draft) => {
-          const item = add(draft);
-          nav(`/item/${item.id}`);
-        }}
-        onCancel={() => nav("/")}
-      />
-    </Container>
+return (
+    <>
+      {/* フォーム */}
+      <Container className="pb-28">
+        <PaintAdd
+          onSubmit={(draft) => {
+            add(draft);
+            nav("/");
+          }}
+          onCancel={() => nav("/")}
+          bindSubmit={(fn) => {
+            submitRef.current = fn;
+          }}
+        />
+      </Container>
+
+      {/* fixed 登録ボタン */}
+      <FixedFooter>
+        <Button
+          className="w-full h-12 text-base"
+          onClick={() => submitRef.current?.()}
+        >
+          登録する
+        </Button>
+      </FixedFooter>
+    </>
   );
 }

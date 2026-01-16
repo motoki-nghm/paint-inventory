@@ -1,23 +1,127 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/layout/Container";
 import { usePaints } from "@/lib/PaintsProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { safeJsonParse } from "@/lib/utils";
 import { clearAll } from "@/lib/storage";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
   const { paints, replaceAll } = usePaints();
   const [msg, setMsg] = useState("");
+  const [user, setUser] = useState(null);
+  const [email, setEmail] = useState("");
+  const supabaseEnabled = !!supabase;
+  useEffect(() => {
+    if (!supabase) return;
+
+    let alive = true;
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!alive) return;
+      setUser(data?.session?.user ?? null);
+    })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      alive = false;
+      sub?.subscription?.unsubscribe?.();
+    };
+  }, []);
 
   const exportJson = useMemo(() => JSON.stringify({ paints }, null, 2), [paints]);
 
   return (
     <Container className="space-y-3">
       {msg ? <Alert>{msg}</Alert> : null}
+      {/* ✅ 追加：Supabaseログイン（最小） */}
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="text-lg font-semibold">ログイン（任意）</div>
+          <div className="text-sm text-muted-foreground">
+            ログインすると、端末が変わってもデータを保持できます（Supabase）。
+          </div>
 
+          {!supabaseEnabled ? (
+            <Alert variant="danger">
+              Supabase が未設定です。Vercel/ローカルの環境変数に <code>VITE_SUPABASE_URL</code> と{" "}
+              <code>VITE_SUPABASE_ANON_KEY</code> を設定してください。
+            </Alert>
+          ) : user ? (
+            <div className="space-y-2">
+              <div className="text-sm">
+                ログイン中：<span className="font-semibold">{user.email}</span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setMsg("ログアウトしました。");
+                  }}
+                >
+                  ログアウト
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                ※ ログイン後は、アプリ側（usePaints）がクラウド優先で読み書きする実装にしてください。
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-sm font-medium">メールアドレス</div>
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                inputMode="email"
+                autoComplete="email"
+              />
+              <Button
+                className="w-full"
+                onClick={async () => {
+                  try {
+                    if (!email.trim()) {
+                      setMsg("メールアドレスを入力してください。");
+                      return;
+                    }
+
+                    // ✅ ワンタイムリンク送信（Magic Link）
+                    const { error } = await supabase.auth.signInWithOtp({
+                      email: email.trim(),
+                      options: {
+                        // Vercel本番URLにしたいならここを固定してもOK
+                        emailRedirectTo: window.location.origin + "/settings",
+                      },
+                    });
+
+                    if (error) throw error;
+                    setMsg("ログインリンクを送信しました。メールをご確認ください。");
+                  } catch (e) {
+                    console.error(e);
+                    setMsg("ログインリンクの送信に失敗しました。しばらくして再度お試しください。");
+                  }
+                }}
+              >
+                ログインリンクを送信
+              </Button>
+
+              <div className="text-xs text-muted-foreground">
+                ※ 迷惑メールに入ることがあります。リンクを開くとこのアプリに戻り、ログインが完了します。
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       <Card>
         <CardContent className="p-4 space-y-2">
           <div className="text-lg font-semibold">設定</div>
