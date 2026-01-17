@@ -123,10 +123,10 @@ export default function SettingsPage() {
 
                     const redirectBase = import.meta.env.VITE_SITE_URL || window.location.origin;
 
-                    const { error } = await supabase.auth.signInWithOtp({
-                      email: email.trim(),
+                    const { error } = await supabase.auth.signInWithOAuth({
+                      provider: "google",
                       options: {
-                        emailRedirectTo: redirectBase + "/settings",
+                        redirectTo: `${redirectBase}/settings`,
                       },
                     });
 
