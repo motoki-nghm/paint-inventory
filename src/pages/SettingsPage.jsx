@@ -86,7 +86,7 @@ export default function SettingsPage() {
                     const { error } = await supabase.auth.signInWithOAuth({
                       provider: "google",
                       options: {
-                        redirectTo: redirectBase + "/settings",
+                        redirectTo: window.location.origin + "/auth/callback",
                       },
                     });
 
