@@ -44,41 +44,65 @@ export default function SettingsPage() {
       {msg ? <Alert>{msg}</Alert> : null}
       {/* ✅ 追加：Supabaseログイン（最小） */}
       <Card>
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-4 space-y-4">
           <div className="text-lg font-semibold">ログイン（任意）</div>
           <div className="text-sm text-muted-foreground">
             ログインすると、端末が変わってもデータを保持できます（Supabase）。
           </div>
 
-          {!supabaseEnabled ? (
+          {!supabase ? (
             <Alert variant="danger">
-              Supabase が未設定です。Vercel/ローカルの環境変数に <code>VITE_SUPABASE_URL</code> と{" "}
-              <code>VITE_SUPABASE_ANON_KEY</code> を設定してください。
+              Supabase が未設定です。
+              <br />
+              <code>VITE_SUPABASE_URL</code> / <code>VITE_SUPABASE_ANON_KEY</code> を設定してください。
             </Alert>
           ) : user ? (
             <div className="space-y-2">
               <div className="text-sm">
-                ログイン中：<span className="font-semibold">{user.email}</span>
+                ログイン中：
+                <span className="ml-1 font-semibold">{user.email}</span>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    setMsg("ログアウトしました。");
-                  }}
-                >
-                  ログアウト
-                </Button>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                ※ ログイン後は、アプリ側（usePaints）がクラウド優先で読み書きする実装にしてください。
-              </div>
+
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  setMsg("ログアウトしました。");
+                }}
+              >
+                ログアウト
+              </Button>
             </div>
           ) : (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">メールアドレス</div>
+            <div className="space-y-3">
+              {/* Googleログイン */}
+              <Button
+                className="w-full"
+                onClick={async () => {
+                  try {
+                    const redirectBase = import.meta.env.VITE_SITE_URL || window.location.origin;
+
+                    const { error } = await supabase.auth.signInWithOAuth({
+                      provider: "google",
+                      options: {
+                        redirectTo: redirectBase + "/settings",
+                      },
+                    });
+
+                    if (error) throw error;
+                  } catch (e) {
+                    console.error(e);
+                    setMsg("Googleログインに失敗しました。設定を確認してください。");
+                  }
+                }}
+              >
+                Googleでログイン
+              </Button>
+
+              <div className="text-xs text-muted-foreground text-center">または</div>
+
+              {/* メールログイン（既存） */}
               <Input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -86,7 +110,9 @@ export default function SettingsPage() {
                 inputMode="email"
                 autoComplete="email"
               />
+
               <Button
+                variant="secondary"
                 className="w-full"
                 onClick={async () => {
                   try {
@@ -95,12 +121,12 @@ export default function SettingsPage() {
                       return;
                     }
 
-                    // ✅ ワンタイムリンク送信（Magic Link）
+                    const redirectBase = import.meta.env.VITE_SITE_URL || window.location.origin;
+
                     const { error } = await supabase.auth.signInWithOtp({
                       email: email.trim(),
                       options: {
-                        // Vercel本番URLにしたいならここを固定してもOK
-                        emailRedirectTo: window.location.origin + "/settings",
+                        emailRedirectTo: redirectBase + "/settings",
                       },
                     });
 
@@ -108,20 +134,19 @@ export default function SettingsPage() {
                     setMsg("ログインリンクを送信しました。メールをご確認ください。");
                   } catch (e) {
                     console.error(e);
-                    setMsg("ログインリンクの送信に失敗しました。しばらくして再度お試しください。");
+                    setMsg("ログインリンクの送信に失敗しました。");
                   }
                 }}
               >
-                ログインリンクを送信
+                メールでログイン
               </Button>
 
-              <div className="text-xs text-muted-foreground">
-                ※ 迷惑メールに入ることがあります。リンクを開くとこのアプリに戻り、ログインが完了します。
-              </div>
+              <div className="text-xs text-muted-foreground">※ Googleログインが一番簡単です</div>
             </div>
           )}
         </CardContent>
       </Card>
+
       <Card>
         <CardContent className="p-4 space-y-2">
           <div className="text-lg font-semibold">設定</div>
