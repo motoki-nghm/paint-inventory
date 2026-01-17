@@ -135,25 +135,14 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">色</label>
-          <Select
-            value={COLOR_PRESETS.includes(draft.color ?? "") ? draft.color ?? "" : "custom"}
-            onValueChange={(v) => {
-              if (v === "custom") {
-                // カスタム入力へ
-                set({ color: "" });
-              } else {
-                set({ color: v });
-              }
-            }}
-          >
+          <Select value={draft.color ?? ""} onValueChange={(v) => set({ color: v })}>
             <SelectTrigger>
               <SelectValue placeholder="色を選択" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="custom">（手入力）</SelectItem>
               {COLOR_PRESETS.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label}
                 </SelectItem>
               ))}
             </SelectContent>

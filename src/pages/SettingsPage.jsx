@@ -140,8 +140,6 @@ export default function SettingsPage() {
               >
                 メールでログイン
               </Button>
-
-              <div className="text-xs text-muted-foreground">※ Googleログインが一番簡単です</div>
             </div>
           )}
         </CardContent>
