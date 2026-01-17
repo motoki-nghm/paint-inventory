@@ -7,6 +7,7 @@ import DetailPage from "@/pages/DetailPage";
 import EditPage from "@/pages/EditPage";
 import SettingsPage from "@/pages/SettingsPage";
 import { PaintsProvider } from "@/lib/PaintsProvider";
+import AuthCallbackPage from "@/pages/AuthCallbackPage";
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/item/:id" element={<DetailPage />} />
             <Route path="/item/:id/edit" element={<EditPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
