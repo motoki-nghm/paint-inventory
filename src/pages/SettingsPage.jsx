@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Container from "@/components/layout/Container";
 import { usePaints } from "@/lib/PaintsProvider";
 import { Button } from "@/components/ui/button";
@@ -9,40 +9,24 @@ import { safeJsonParse } from "@/lib/utils";
 import { clearAll } from "@/lib/storage";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/lib/supabase";
+import { useSupabaseAuth } from "@/lib/auth";
 
 export default function SettingsPage() {
   const { paints, replaceAll } = usePaints();
   const [msg, setMsg] = useState("");
-  const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
-  const supabaseEnabled = !!supabase;
-  useEffect(() => {
-    if (!supabase) return;
 
-    let alive = true;
-
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!alive) return;
-      setUser(data?.session?.user ?? null);
-    })();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      alive = false;
-      sub?.subscription?.unsubscribe?.();
-    };
-  }, []);
+  const auth = useSupabaseAuth();
+  const user = auth.user;
+  const supabaseEnabled = auth.enabled;
 
   const exportJson = useMemo(() => JSON.stringify({ paints }, null, 2), [paints]);
 
   return (
     <Container className="space-y-3">
       {msg ? <Alert>{msg}</Alert> : null}
-      {/* ✅ 追加：Supabaseログイン（最小） */}
+
+      {/* ✅ Supabaseログイン（最小） */}
       <Card>
         <CardContent className="p-4 space-y-4">
           <div className="text-lg font-semibold">ログイン（任意）</div>
@@ -50,14 +34,16 @@ export default function SettingsPage() {
             ログインすると、端末が変わってもデータを保持できます（Supabase）。
           </div>
 
-          {!supabase ? (
+          {!supabaseEnabled ? (
             <Alert variant="danger">
               Supabase が未設定です。
               <br />
               <code>VITE_SUPABASE_URL</code> / <code>VITE_SUPABASE_ANON_KEY</code> を設定してください。
             </Alert>
+          ) : auth.loading ? (
+            <div className="text-sm text-muted-foreground">ログイン状態を確認中…</div>
           ) : user ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="text-sm">
                 ログイン中：
                 <span className="ml-1 font-semibold">{user.email}</span>
@@ -67,8 +53,13 @@ export default function SettingsPage() {
                 variant="secondary"
                 className="w-full"
                 onClick={async () => {
-                  await supabase.auth.signOut();
-                  setMsg("ログアウトしました。");
+                  try {
+                    await supabase.auth.signOut();
+                    setMsg("ログアウトしました。");
+                  } catch (e) {
+                    console.error(e);
+                    setMsg("ログアウトに失敗しました。");
+                  }
                 }}
               >
                 ログアウト
@@ -81,12 +72,13 @@ export default function SettingsPage() {
                 className="w-full"
                 onClick={async () => {
                   try {
+                    setMsg("");
                     const redirectBase = import.meta.env.VITE_SITE_URL || window.location.origin;
 
                     const { error } = await supabase.auth.signInWithOAuth({
                       provider: "google",
                       options: {
-                        redirectTo: window.location.origin + "/auth/callback",
+                        redirectTo: `${redirectBase}/auth/callback`,
                       },
                     });
 
@@ -102,7 +94,7 @@ export default function SettingsPage() {
 
               <div className="text-xs text-muted-foreground text-center">または</div>
 
-              {/* メールログイン（既存） */}
+              {/* メール（OTP / Magic Link） */}
               <Input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -116,6 +108,7 @@ export default function SettingsPage() {
                 className="w-full"
                 onClick={async () => {
                   try {
+                    setMsg("");
                     if (!email.trim()) {
                       setMsg("メールアドレスを入力してください。");
                       return;
@@ -123,10 +116,10 @@ export default function SettingsPage() {
 
                     const redirectBase = import.meta.env.VITE_SITE_URL || window.location.origin;
 
-                    const { error } = await supabase.auth.signInWithOAuth({
-                      provider: "google",
+                    const { error } = await supabase.auth.signInWithOtp({
+                      email: email.trim(),
                       options: {
-                        redirectTo: `${redirectBase}/settings`,
+                        emailRedirectTo: `${redirectBase}/auth/callback`,
                       },
                     });
 
@@ -140,6 +133,10 @@ export default function SettingsPage() {
               >
                 メールでログイン
               </Button>
+
+              <div className="text-xs text-muted-foreground">
+                ※ 迷惑メールに入ることがあります。リンクを開くとこのアプリに戻りログインが完了します。
+              </div>
             </div>
           )}
         </CardContent>
@@ -212,16 +209,6 @@ export default function SettingsPage() {
           >
             全消去
           </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-4 space-y-2">
-          <div className="font-semibold">環境変数（任意）</div>
-          <div className="text-sm text-muted-foreground">
-            UPCItemDB を使う場合は <code className="px-1 py-0.5 rounded bg-muted-foreground">VITE_UPCITEMDB_KEY</code>{" "}
-            を設定してください。 未設定でも Open Food Facts → 失敗時は手入力で保存できます。
-          </div>
         </CardContent>
       </Card>
     </Container>
