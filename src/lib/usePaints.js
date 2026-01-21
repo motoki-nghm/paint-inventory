@@ -47,7 +47,20 @@ export function usePaints() {
   const brands = useMemo(() => {
     const s = new Set();
     for (const p of paints) if (p.brand?.trim()) s.add(p.brand.trim());
-    return Array.from(s).sort((a, b) => a.localeCompare(b));
+    return Array.from(s).sort((a, b) => a.localeCompare(b, "ja"));
+  }, [paints]);
+
+  const pinnedBrands = useMemo(() => {
+    const counts = new Map();
+    for (const p of paints) {
+      const b = (p.brand || "").trim();
+      if (!b) continue;
+      counts.set(b, (counts.get(b) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ja"))
+      .slice(0, 6) // ←固定表示したい数（好みで変更）
+      .map(([name]) => name);
   }, [paints]);
 
   const filtered = useMemo(() => {
@@ -138,7 +151,7 @@ export function usePaints() {
           imageUrl: patch.imageUrl ?? p.imageUrl,
           system: patch.system ?? p.system,
         };
-      })
+      }),
     );
   }
 
@@ -165,6 +178,7 @@ export function usePaints() {
     filters,
     setFilters,
     brands,
+    pinnedBrands,
     loaded,
     getById,
     add,

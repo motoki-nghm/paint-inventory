@@ -1,8 +1,15 @@
 import PaintForm from "@/components/paint/PaintForm";
 import { usePaints } from "@/lib/usePaints";
 
-export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint, bindSubmit }) {
-  const { brands } = usePaints();
+export default function PaintAdd({
+  initial = {},
+  onSubmit,
+  onCancel,
+  hint,
+  bindSubmit,
+  brandOptions = [],
+  pinnedBrandOptions = [],
+}) {
   const base = {
     name: "",
     brand: "",
@@ -26,8 +33,9 @@ export default function PaintAdd({ initial = {}, onSubmit, onCancel, hint, bindS
       onSubmit={onSubmit}
       onCancel={onCancel}
       hint={hint}
-      brandOptions={brands}
       bindSubmit={bindSubmit}
+      brandOptions={brandOptions}
+      pinnedBrands={pinnedBrandOptions}
     />
   );
 }

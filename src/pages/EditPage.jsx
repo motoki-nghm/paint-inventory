@@ -8,7 +8,7 @@ import { Alert } from "@/components/ui/alert";
 export default function EditPage() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { getById, update } = usePaints();
+  const { getById, update, brands, pinnedBrands } = usePaints();
 
   const item = id ? getById(id) : null;
 
@@ -47,6 +47,8 @@ export default function EditPage() {
           update(item.id, draft);
           nav(`/item/${item.id}`);
         }}
+        brandOptions={brands}
+        pinnedBrandOptions={pinnedBrands}
       />
     </Container>
   );

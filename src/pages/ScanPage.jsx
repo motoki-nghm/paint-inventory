@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export default function ScanPage() {
   const nav = useNavigate();
-  const { add } = usePaints();
+  const { add, brands, pinnedBrands } = usePaints();
   const submitRef = useRef(null);
 
   return (
@@ -29,6 +29,8 @@ export default function ScanPage() {
           bindSubmit={(fn) => {
             submitRef.current = fn;
           }}
+          brandOptions={brands}
+          pinnedBrandOptions={pinnedBrands}
         />
       </Container>
 

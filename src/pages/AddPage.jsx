@@ -8,11 +8,10 @@ import { useRef } from "react";
 
 export default function AddPage() {
   const nav = useNavigate();
-  const { add } = usePaints();
+  const { add, brands, pinnedBrands } = usePaints();
   const submitRef = useRef(null);
 
-
-return (
+  return (
     <>
       {/* フォーム */}
       <Container className="pb-28">
@@ -25,15 +24,14 @@ return (
           bindSubmit={(fn) => {
             submitRef.current = fn;
           }}
+          brandOptions={brands}
+          pinnedBrandOptions={pinnedBrands}
         />
       </Container>
 
       {/* fixed 登録ボタン */}
       <FixedFooter>
-        <Button
-          className="w-full h-12 text-base"
-          onClick={() => submitRef.current?.()}
-        >
+        <Button className="w-full h-12 text-base" onClick={() => submitRef.current?.()}>
           登録する
         </Button>
       </FixedFooter>

@@ -17,7 +17,16 @@ function readFileAsDataUrl(file) {
   });
 }
 
-export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hint, brandOptions = [], bindSubmit }) {
+export default function PaintForm({
+  initial,
+  submitLabel,
+  onSubmit,
+  onCancel,
+  hint,
+  brandOptions = [],
+  bindSubmit,
+  pinnedBrands = [],
+}) {
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState(null);
 
@@ -50,6 +59,7 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
 
   const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
+  const brandListId = "brand-options";
 
   return (
     <div className="mx-auto w-full max-w-[360px] px-5 py-2 space-y-5">
@@ -68,34 +78,44 @@ export default function PaintForm({ initial, submitLabel, onSubmit, onCancel, hi
 
       {/* ブランド / 種類 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {/* ✅ ブランド欄 */}
         <div className="space-y-2">
-          <Select
-            value={brandOptions.includes(draft.brand ?? "") ? draft.brand ?? "" : "custom"}
-            onValueChange={(v) => {
-              if (v === "custom") set({ brand: "" });
-              else set({ brand: v });
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="ブランドを選択" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="custom">（手入力）</SelectItem>
-              {brandOptions.map((b) => (
-                <SelectItem key={b} value={b}>
-                  {b}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="text-sm font-medium">ブランド</label>
 
-          {!brandOptions.includes(draft.brand ?? "") ? (
-            <Input
-              value={draft.brand ?? ""}
-              onChange={(e) => set({ brand: e.target.value })}
-              placeholder="例）GSI / タミヤ"
-            />
+          {/* ✅ 固定表示（よく使う） */}
+          {pinnedBrands.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {pinnedBrands.map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() => set({ brand: b })}
+                  className={[
+                    "px-3 py-1.5 rounded-full text-xs border",
+                    "border-border bg-muted hover:bg-muted/70",
+                    "text-foreground",
+                  ].join(" ")}
+                >
+                  {b}
+                </button>
+              ))}
+            </div>
           ) : null}
+
+          {/* ✅ 候補付きInput（手入力OK） */}
+          <Input
+            list={brandListId}
+            value={draft.brand ?? ""}
+            onChange={(e) => set({ brand: e.target.value })}
+            placeholder="例）GSI / TAMIYA / GAIA"
+          />
+          <datalist id={brandListId}>
+            {brandOptions.map((b) => (
+              <option key={b} value={b} />
+            ))}
+          </datalist>
+
+          <div className="text-xs text-muted-foreground">※ よく使うブランドは上に固定表示されます</div>
         </div>
 
         <div className="space-y-2">

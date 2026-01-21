@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-export default function ScanAdd({ onSave, onCancel ,bindSubmit}) {
+export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [], pinnedBrandOptions = [] }) {
   const videoRef = useRef(null);
   const handleRef = useRef(null);
 
@@ -169,6 +169,8 @@ export default function ScanAdd({ onSave, onCancel ,bindSubmit}) {
         onSubmit={onSave}
         onCancel={onCancel}
         bindSubmit={bindSubmit}
+        brandOptions={brandOptions}
+        pinnedBrandOptions={pinnedBrandOptions}
       />
     </div>
   );
