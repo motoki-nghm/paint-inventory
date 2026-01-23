@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
 import { clamp } from "@/lib/utils";
-import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS, COLOR_PRESETS } from "@/lib/db";
+import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS, COLOR_PRESETS, isPresetColor } from "@/lib/db";
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -69,11 +69,13 @@ export default function PaintForm({
       {/* 商品名 */}
       <div className="space-y-2">
         <label className="text-sm font-medium">商品名（必須）</label>
-        <Input
-          value={draft.name ?? ""}
-          onChange={(e) => set({ name: e.target.value })}
-          placeholder="例）Mr.カラー C1 ホワイト"
-        />
+        {!isPresetColor(draft.color) ? (
+          <Input
+            value={draft.color ?? ""}
+            onChange={(e) => set({ color: e.target.value })}
+            placeholder="例）C1 ホワイト / つや消し黒 / 明るい青"
+          />
+        ) : null}
       </div>
 
       {/* ブランド / 種類 */}

@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { colorLabel } from "@/lib/db";
 
 export default function PaintDetail({ item }) {
+  const src = item.imageDataUrl || item.imageUrl;
   return (
     <div className="space-y-3">
       <Card>
@@ -54,10 +55,10 @@ export default function PaintDetail({ item }) {
         </CardContent>
       </Card>
 
-      {item.imageDataUrl ? (
+      {src ? (
         <Card>
           <CardContent className="p-3">
-            <img src={item.imageDataUrl} className="w-full rounded-lg border border-border" />
+            <img src={src} className="w-full rounded-lg border border-border" />
           </CardContent>
         </Card>
       ) : null}
