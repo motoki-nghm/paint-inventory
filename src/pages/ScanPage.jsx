@@ -19,8 +19,16 @@ export default function ScanPage() {
           onCancel={() => nav("/")}
           onSave={async (draft) => {
             try {
-              await add(draft);
-              nav("/"); // 保存後は一覧へ（おすすめUX）
+              const r = await add(draft);
+
+              // ✅ 重複で「キャンセル」されたら add() が null を返す
+              if (!r) {
+                // ScanAddの入力を確実にクリアしたいので、/scan に再遷移して実質リマウント
+                nav(`/scan?reset=${Date.now()}`, { replace: true });
+                return;
+              }
+
+              nav("/"); // 保存 or qty+1 更新後は一覧へ
             } catch (e) {
               console.error(e);
               alert("保存に失敗しました。もう一度お試しください。");

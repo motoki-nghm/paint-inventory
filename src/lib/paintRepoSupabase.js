@@ -50,14 +50,28 @@ export async function fetchPaintsSupabase() {
   const user = await getSessionUser();
   if (!user) return [];
 
-  const { data, error } = await supabase
-    .from("paints")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("updated_at", { ascending: false });
+  const pageSize = 1000;
+  let from = 0;
+  let all = [];
 
-  if (error) throw error;
-  return (data ?? []).map(fromRow);
+  while (true) {
+    const { data, error } = await supabase
+      .from("paints")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+
+    const rows = data ?? [];
+    all = all.concat(rows);
+
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return all.map(fromRow);
 }
 
 export async function upsertPaintSupabase(paint) {
@@ -66,7 +80,7 @@ export async function upsertPaintSupabase(paint) {
   if (!user) throw new Error("Not signed in");
 
   const row = toRow(user.id, paint);
-  const { error } = await supabase.from("paints").upsert(row);
+  const { error } = await supabase.from("paints").upsert(row, { onConflict: "id" });
   if (error) throw error;
 }
 
