@@ -33,12 +33,35 @@ export const COLOR_PRESETS = [
   { value: "red", label: "レッド" },
   { value: "pink", label: "ピンク" },
   { value: "blue", label: "ブルー" },
+  { value: "navy", label: "ネイビー" },
   { value: "yellow", label: "イエロー" },
   { value: "green", label: "グリーン" },
+  { value: "orange", label: "オレンジ" },
   { value: "brown", label: "ブラウン" },
   { value: "silver", label: "シルバー" },
+  { value: "gunmetal", label: "ガンメタ" },
   { value: "gold", label: "ゴールド" },
   { value: "clear", label: "クリア" },
-  { value: "clearColor", label: "クリアーカラー" },
-  { value: "fluorescent", label: "蛍光" },
+  { value: "clearColor", label: "クリアカラー" },
+  { value: "fluorescentRed", label: "蛍光レッド" },
+  { value: "fluorescentPink", label: "蛍光ピンク" },
+  { value: "fluorescentOrange", label: "蛍光オレンジ" },
+  { value: "fluorescentYellow", label: "蛍光イエロー" },
+  { value: "fluorescentGreen", label: "蛍光グリーン" },
+  { value: "fluorescentBlue", label: "蛍光ブルー" },
+  { value: "metallicRed", label: "メタリックレッド" },
+  { value: "metallicBlue", label: "メタリックブルー" },
+  { value: "metallicGreen", label: "メタリックグリーン" },
 ];
+
+export function colorLabel(value) {
+  const v = String(value ?? "").trim();
+  if (!v) return "未設定";
+  const hit = COLOR_PRESETS.find((c) => c.value === v);
+  return hit ? hit.label : v; // ←プリセット外は手入力文字列をそのまま表示
+}
+
+export function isPresetColor(value) {
+  const v = String(value ?? "").trim();
+  return COLOR_PRESETS.some((c) => c.value === v);
+}

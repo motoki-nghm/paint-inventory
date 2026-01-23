@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon } from "lucide-react";
-import { PAINT_SYSTEM_LABELS } from "@/lib/db";
+import { PAINT_SYSTEM_LABELS, colorLabel } from "@/lib/db";
 
 export default function PaintCard({ item }) {
   const thumb = item.imageDataUrl || item.imageUrl || "";
@@ -24,12 +24,7 @@ export default function PaintCard({ item }) {
 
             <div className="mt-1 flex flex-wrap gap-1 items-center text-xs text-muted-foreground">
               {item.brand ? <span>{item.brand}</span> : null}
-              {item.color ? (
-                <span>
-                  {item.brand ? "/ " : ""}
-                  {item.color}
-                </span>
-              ) : null}
+              {item.color ? <span className="text-xs text-muted-foreground">/ {colorLabel(item.color)}</span> : null}
             </div>
 
             <div className="mt-2 flex gap-2 items-center">

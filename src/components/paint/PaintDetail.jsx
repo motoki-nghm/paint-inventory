@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { colorLabel } from "@/lib/db";
 
 export default function PaintDetail({ item }) {
   return (
@@ -12,7 +13,7 @@ export default function PaintDetail({ item }) {
               <div className="text-lg font-semibold leading-snug">{item.name}</div>
               <div className="mt-1 text-sm text-muted-foreground">
                 {item.brand ? item.brand : "ブランド未設定"}
-                {item.color ? ` • ${item.color}` : ""}
+                {item.color ? ` • ${colorLabel(item.color)}` : ""}
               </div>
             </div>
             <div className="shrink-0">
