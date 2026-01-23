@@ -125,27 +125,52 @@ export function usePaints() {
   // 🔥 手動同期：全件 upsert（chunk対応）
   async function syncNow({ supabase, user }) {
     if (!supabase || !user) throw new Error("not logged in");
-    if (!loaded) return;
+    if (syncing) return; // ✅ 二重押し防止
 
     setSyncing(true);
-    const { error } = await supabase.from("paints").upsert(payload, { onConflict: "id" });
-    if (error) {
-      console.error("SYNC ERROR:", error);
-      throw error;
-    }
-    try {
-      const rows = paints.map((p) => toRow(p, user.id));
 
+    try {
+      // ✅ uuidじゃないidが混ざると落ちるので弾く（暫定）
+      const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      const payload = paints
+        .filter((p) => uuidRe.test(String(p.id || ""))) // ✅ ここ
+        .map((p) => ({
+          id: p.id,
+          user_id: user.id,
+
+          name: p.name ?? "",
+          brand: p.brand ?? null,
+          type: p.type ?? null,
+          system: p.system ?? null,
+          color: p.color ?? null,
+          note: p.note ?? null,
+          capacity: p.capacity ?? null,
+          qty: typeof p.qty === "number" ? p.qty : null,
+          barcode: p.barcode ?? null,
+          purchased_at: p.purchasedAt ?? null,
+          image_url: p.imageUrl ?? null,
+          image_data_url: p.imageDataUrl ?? null,
+        }));
+
+      // 0件でも成功扱い
+      if (payload.length === 0) {
+        setLastSyncedAt(Date.now());
+        return;
+      }
+
+      // ✅ 200件ずつ（安全）
       const chunkSize = 200;
-      for (let i = 0; i < rows.length; i += chunkSize) {
-        const chunk = rows.slice(i, i + chunkSize);
+      for (let i = 0; i < payload.length; i += chunkSize) {
+        const chunk = payload.slice(i, i + chunkSize);
         const { error } = await supabase.from("paints").upsert(chunk, { onConflict: "id" });
         if (error) throw error;
       }
 
-      // ✅ 同期成功時は「同期したデータの最新updatedAt」に合わせる（ズレにくい）
-      const maxUpdated = paints.reduce((m, p) => Math.max(m, p.updatedAt ?? 0), 0);
-      setLastSyncedAt(maxUpdated || Date.now());
+      setLastSyncedAt(Date.now());
+      // eslint-disable-next-line no-useless-catch
+    } catch (e) {
+      throw e;
     } finally {
       setSyncing(false);
     }

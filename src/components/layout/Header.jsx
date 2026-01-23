@@ -43,9 +43,10 @@ export default function Header() {
     if (!auth.loggedIn || !auth.user) return;
     try {
       await syncNow({ supabase, user: auth.user });
+      alert("同期しました");
     } catch (e) {
       console.error(e);
-      alert(`同期に失敗しました: ${e?.message ?? "unknown error"}`);
+      alert(`同期に失敗しました: ${e?.message ?? JSON.stringify(e)}`);
     }
   }
 
