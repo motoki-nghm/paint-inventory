@@ -13,7 +13,7 @@ export default function PaintDetail({ item }) {
             <div className="min-w-0">
               <div className="text-lg font-semibold leading-snug">{item.name}</div>
               <div className="mt-1 text-sm text-muted-foreground">
-                {item.brand ? item.brand : "ブランド未設定"}
+                {item.brand ? item.brand : "メーカー未設定"}
                 {item.color ? ` • ${colorLabel(item.color)}` : ""}
               </div>
             </div>

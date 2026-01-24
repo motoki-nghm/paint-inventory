@@ -45,7 +45,7 @@ export default function ListPage() {
                 onClick={() => setGroupBy("brand")}
               >
                 {" "}
-                ブランド{" "}
+                メーカー{" "}
               </Button>{" "}
             </div>{" "}
           </div>

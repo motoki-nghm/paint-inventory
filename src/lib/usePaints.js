@@ -332,7 +332,7 @@ export function usePaints() {
       type: input.type ?? "other",
       system: input.system ?? "unknown",
 
-      color: input.color ?? undefined,
+      color: normalizeColor(input.color),
       note: String(input.note ?? "").trim() || undefined,
       capacity: String(input.capacity ?? "").trim() || undefined,
       qty: typeof input.qty === "number" ? input.qty : undefined,
@@ -373,7 +373,7 @@ export function usePaints() {
           brand: (patch.brand ?? p.brand)?.trim() || undefined,
 
           // ✅ ここが重要：更新でも必ず正規化
-          color: normalizeColor(patch.color ?? p.color ?? DEFAULT_COLOR),
+          color: normalizeColor(patch.color ?? p.color),
 
           note: (patch.note ?? p.note)?.trim() || undefined,
           capacity: (patch.capacity ?? p.capacity)?.trim() || undefined,

@@ -6,7 +6,7 @@ export default function FilterBar({ filters, brands, onChange }) {
   return (
     <div className="space-y-2">
       <Input
-        placeholder="検索（商品名/ブランド/色/メモ/バーコード）"
+        placeholder="検索（商品名/メーカー/色/メモ/バーコード）"
         value={filters.q}
         onChange={(e) => onChange({ ...filters, q: e.target.value })}
       />
@@ -27,7 +27,7 @@ export default function FilterBar({ filters, brands, onChange }) {
 
         <Select value={filters.brand} onValueChange={(v) => onChange({ ...filters, brand: v })}>
           <SelectTrigger>
-            <SelectValue placeholder="ブランド" />
+            <SelectValue placeholder="メーカー" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">すべて</SelectItem>

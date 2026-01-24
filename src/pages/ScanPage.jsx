@@ -40,6 +40,7 @@ export default function ScanPage() {
           }}
           brandOptions={brands}
           pinnedBrandOptions={pinnedBrands}
+          pinnedBrands={pinnedBrands}
         />
       </Container>
 

@@ -1,20 +1,14 @@
+// src/lib/db.js
 export const PAINT_TYPES = ["paint", "surfacer", "clear", "thinner", "other"];
 
-export const PAINT_SYSTEMS = [
-  "unknown", // 未設定
-  "lacquer", // ラッカー
-  "aqueous", // 水性
-  "enamel", // エナメル
-  "acrylic", // アクリル
-  "marker", // マーカー
-  "other",
-];
+export const PAINT_SYSTEMS = ["unknown", "lacquer", "aqueous", "enamel", "acrylic", "marker", "other"];
 
 export const PAINT_SYSTEM_LABELS = {
   unknown: "未設定",
   lacquer: "ラッカー",
   aqueous: "水性",
   enamel: "エナメル",
+  acrylic: "アクリル",
   marker: "マーカー",
   other: "その他",
 };
@@ -26,9 +20,11 @@ export const DEFAULT_FILTERS = {
   system: "all",
 };
 
-export const DEFAULT_COLOR = "white";
+// ✅ 空/未設定は white じゃなく unknown
+export const DEFAULT_COLOR = "unknown";
 
 export const COLOR_PRESETS = [
+  { value: "unknown", label: "未設定" },
   { value: "white", label: "ホワイト" },
   { value: "black", label: "ブラック" },
   { value: "gray", label: "グレー" },
@@ -36,6 +32,7 @@ export const COLOR_PRESETS = [
   { value: "pink", label: "ピンク" },
   { value: "blue", label: "ブルー" },
   { value: "navy", label: "ネイビー" },
+  { value: "purple", label: "パープル" },
   { value: "yellow", label: "イエロー" },
   { value: "green", label: "グリーン" },
   { value: "orange", label: "オレンジ" },
@@ -44,6 +41,8 @@ export const COLOR_PRESETS = [
   { value: "gunmetal", label: "ガンメタ" },
   { value: "gold", label: "ゴールド" },
   { value: "clear", label: "クリア" },
+
+  // ✅ キャメルケースも “プリセット” として扱えるようにする
   { value: "clearColor", label: "クリアカラー" },
   { value: "fluorescentRed", label: "蛍光レッド" },
   { value: "fluorescentPink", label: "蛍光ピンク" },
@@ -56,9 +55,8 @@ export const COLOR_PRESETS = [
   { value: "metallicGreen", label: "メタリックグリーン" },
 ];
 
+// ---- ここが重要：大小文字・キャメルケースも“同じキー”扱いにする ----
 const VALUE_CANON = new Map(COLOR_PRESETS.map((c) => [String(c.value).trim().toLowerCase(), c.value]));
-
-const VALUE_SET = new Set(Array.from(VALUE_CANON.keys()));
 
 const LABEL_TO_VALUE = new Map(COLOR_PRESETS.map((c) => [String(c.label).trim().toLowerCase(), c.value]));
 
@@ -66,16 +64,7 @@ export function isPresetColor(v) {
   const key = String(v ?? "")
     .trim()
     .toLowerCase();
-  return VALUE_SET.has(key);
-}
-
-export function colorLabel(v) {
-  const key = String(v ?? "")
-    .trim()
-    .toLowerCase();
-  const canon = VALUE_CANON.get(key); // ← "clearcolor" でも "clearColor" に戻せる
-  const hit = COLOR_PRESETS.find((c) => c.value === canon);
-  return hit?.label ?? (key ? String(v).trim() : "未設定");
+  return VALUE_CANON.has(key);
 }
 
 export function normalizeColor(v) {
@@ -94,4 +83,10 @@ export function normalizeColor(v) {
 
   // プリセット外はそのまま（手入力色）
   return raw;
+}
+
+export function colorLabel(v) {
+  const canon = normalizeColor(v);
+  const hit = COLOR_PRESETS.find((c) => c.value === canon);
+  return hit?.label ?? (canon ? canon : "未設定");
 }

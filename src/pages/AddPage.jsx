@@ -17,18 +17,15 @@ export default function AddPage() {
       <Container className="pb-28">
         <PaintAdd
           onSubmit={(draft) => {
-            console.log("AddPage onSubmit draft", draft);
-            const r = add(draft);
-            console.log("add() returned", r);
             add(draft);
             nav("/");
           }}
           onCancel={() => nav("/")}
-          brandOptions={brands}
-          pinnedBrands={pinnedBrands}
           bindSubmit={(fn) => {
             submitRef.current = fn;
           }}
+          brandOptions={brands}
+          pinnedBrands={pinnedBrands}
         />
       </Container>
 

@@ -45,8 +45,13 @@ export default function PaintForm({
       initial?.imageDataUrl ? "1" : "0",
       initial?.color ?? "",
       initial?.brand ?? "",
+      initial?.system ?? "",
+      initial?.type ?? "",
+      initial?.capacity ?? "",
     ].join("|");
   }, [initial]);
+
+  const isCustomColor = draft.color && !isPresetColor(draft.color);
 
   useEffect(() => {
     setDraft(initial);
@@ -97,12 +102,11 @@ export default function PaintForm({
         />
       </div>
 
-      {/* ブランド / 種類 */}
+      {/* メーカー / 種類 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {/* ブランド */}
+        {/* メーカー */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">ブランド</label>
-
+          <label className="text-sm font-medium">メーカー</label>
           {pinnedBrands.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {pinnedBrands.map((b) => (
@@ -130,7 +134,7 @@ export default function PaintForm({
             ))}
           </datalist>
 
-          <div className="text-xs text-muted-foreground">※ よく使うブランドは上に固定表示されます</div>
+          <div className="text-xs text-muted-foreground">※ よく使うメーカーは上に固定表示されます</div>
         </div>
 
         {/* 種類 */}
@@ -172,7 +176,10 @@ export default function PaintForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">色</label>
-          <Select value={(draft.color ?? DEFAULT_COLOR) || DEFAULT_COLOR} onValueChange={(v) => set({ color: v })}>
+          <Select
+            value={draft.color || "unknown"} // ✅ 空なら未設定
+            onValueChange={(v) => set({ color: v })}
+          >
             <SelectTrigger>
               <SelectValue placeholder="色を選択" />
             </SelectTrigger>
@@ -185,13 +192,13 @@ export default function PaintForm({
             </SelectContent>
           </Select>
 
-          {!isPresetColor(draft.color) ? (
+          {isCustomColor && (
             <Input
-              value={draft.color ?? ""}
+              value={draft.color}
               onChange={(e) => set({ color: e.target.value })}
-              placeholder="例）スカイブルー / つや消し黒 など"
+              placeholder="例）スカイブルー / つや消し黒"
             />
-          ) : null}
+          )}
 
           <div className="text-xs text-muted-foreground">※ プリセットに無い色は手入力できます</div>
         </div>

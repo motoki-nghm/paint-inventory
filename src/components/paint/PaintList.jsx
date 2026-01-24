@@ -1,12 +1,15 @@
 import PaintCard from "@/components/paint/PaintCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { COLOR_PRESETS, colorLabel, isPresetColor } from "@/lib/db";
+import { colorLabel, isPresetColor, normalizeColor } from "@/lib/db";
 
 function groupLabel(groupBy, key) {
   if (!key) return "未設定";
+
   if (groupBy === "color") {
+    // keyは getGroupKey() が返した canon を想定
     return isPresetColor(key) ? colorLabel(key) : `${key}（手入力）`;
   }
+
   return key;
 }
 
@@ -15,9 +18,8 @@ function getGroupKey(item, groupBy) {
   if (groupBy === "brand") return (item.brand || "").trim() || "未設定";
 
   if (groupBy === "color") {
-    const c = (item.color || "").trim();
-    if (!c) return "未設定";
-    return COLOR_PRESETS.includes(c) ? c : "（手入力の色）";
+    const canon = normalizeColor(item.color); // ★ここが本丸（value/label/大小を吸収）
+    return canon || "未設定";
   }
 
   return "未設定";
