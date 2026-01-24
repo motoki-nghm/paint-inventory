@@ -41,6 +41,7 @@ export default function EditPage() {
           barcode: item.barcode ?? "",
           purchasedAt: item.purchasedAt ?? "",
           imageDataUrl: item.imageDataUrl,
+          system: item.system ?? "unknown",
         }}
         onCancel={() => nav(`/item/${item.id}`)}
         onSubmit={(draft) => {

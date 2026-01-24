@@ -6,9 +6,9 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { usePaints } from "@/lib/PaintsProvider";
 
 export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [], pinnedBrands = [] }) {
-  console.log("pinnedBrands in PaintForm:", pinnedBrands);
   const videoRef = useRef(null);
   const handleRef = useRef(null);
 
@@ -18,6 +18,11 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
   const [status, setStatus] = useState("idle"); // idle|scanning|found|lookup|ready|error
   const [message, setMessage] = useState("");
   const [lookupImageUrl, setLookupImageUrl] = useState("");
+  const { findByBarcode, update } = usePaints();
+
+  const [dupOpen, setDupOpen] = useState(false);
+  const [dupItem, setDupItem] = useState(null); // 既存アイテム
+  const [dupCode, setDupCode] = useState(""); // 念のため保持
 
   const hint = useMemo(() => {
     if (status === "scanning") return "バーコードを枠内に合わせてください。連続検出は自動で抑制します。";
@@ -29,6 +34,18 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
     }
     return "カメラが起動しない場合は権限/ブラウザ/HTTPS を確認してください。";
   }, [status, barcode, lookupName, lookupSource]);
+
+  async function resetAndRescan(msg = "") {
+    setBarcode("");
+    setLookupName("");
+    setLookupSource("");
+    setLookupImageUrl("");
+    setMessage(msg);
+    setStatus("idle");
+
+    // すぐ再開
+    await beginScan();
+  }
 
   async function beginScan() {
     setStatus("scanning");
@@ -67,6 +84,16 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
           setLookupImageUrl("");
         }
 
+        // lookup 結果反映後（setLookupName/source の後）に重複チェック
+        const existing = findByBarcode(code);
+        if (existing) {
+          setDupItem(existing);
+          setDupCode(code);
+          setDupOpen(true);
+          setStatus("ready"); // 画面のヒント表示を崩さないため（任意）
+          return; // ✅ ここで止める（フォームに進ませない）
+        }
+
         setStatus("ready");
       },
     });
@@ -97,6 +124,7 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
       color: "white",
       type: "paint",
       system: "unknown",
+      qty: 1,
     }),
     [barcode, lookupName, lookupImageUrl],
   );
@@ -155,6 +183,73 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
         brandOptions={brandOptions}
         pinnedBrands={pinnedBrands}
       />
+      {/* ✅ 重複モーダル（UI統一：Card + Button で自前実装） */}
+      {dupOpen && dupItem ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => {
+              setDupOpen(false);
+              setDupItem(null);
+              void resetAndRescan("キャンセルしました。");
+            }}
+          />
+          {/* panel */}
+          <Card className="relative w-full max-w-[420px]">
+            <CardContent className="p-4 space-y-3">
+              <div className="text-base font-semibold">登録済みのバーコードです</div>
+              <div className="text-sm text-muted-foreground">
+                同じバーコードが見つかりました。所持数を <span className="font-semibold">+1</span> しますか？
+              </div>
+
+              <div className="rounded-lg border border-border p-3 bg-muted/30">
+                <div className="text-sm font-medium">{dupItem.name}</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {dupItem.brand ? `メーカー: ${dupItem.brand} / ` : ""}
+                  barcode: {dupItem.barcode || dupCode}
+                  {typeof dupItem.qty === "number" ? ` / 所持数: ${dupItem.qty}` : ""}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    setDupOpen(false);
+                    setDupItem(null);
+                    void resetAndRescan("キャンセルしました。");
+                  }}
+                >
+                  しない（キャンセル）
+                </Button>
+
+                <Button
+                  className="w-full"
+                  onClick={async () => {
+                    try {
+                      const nextQty = (typeof dupItem.qty === "number" ? dupItem.qty : 0) + 1;
+                      update(dupItem.id, { qty: nextQty }); // ✅ 既存を +1（update内で updatedAt も更新される想定）
+                      setDupOpen(false);
+                      setDupItem(null);
+                      await resetAndRescan("所持数を +1 しました。");
+                    } catch (e) {
+                      console.error(e);
+                      setMessage("更新に失敗しました。");
+                      setDupOpen(false);
+                      setDupItem(null);
+                      await resetAndRescan("");
+                    }
+                  }}
+                >
+                  +1 する
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
     </div>
   );
 }

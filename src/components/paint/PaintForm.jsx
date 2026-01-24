@@ -5,8 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import { clamp } from "@/lib/utils";
 import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS, DEFAULT_COLOR, COLOR_PRESETS, isPresetColor } from "@/lib/db";
+import { usePaints } from "@/lib/PaintsProvider";
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -30,6 +32,11 @@ export default function PaintForm({
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const { findByBarcode, update } = usePaints();
+
+  const [dupOpen, setDupOpen] = useState(false);
+  const [dupItem, setDupItem] = useState(null);
+  const [dupCode, setDupCode] = useState("");
 
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
   const brandListId = "brand-options";
@@ -48,6 +55,7 @@ export default function PaintForm({
       initial?.system ?? "",
       initial?.type ?? "",
       initial?.capacity ?? "",
+      initial?.qty ?? "",
     ].join("|");
   }, [initial]);
 
@@ -56,6 +64,19 @@ export default function PaintForm({
   useEffect(() => {
     setDraft(initial);
   }, [initialSig]);
+
+  function checkDuplicateBarcode(code) {
+    const c = String(code ?? "").trim();
+    if (!c) return null;
+
+    const hit = findByBarcode(c);
+    if (!hit) return null;
+
+    // ✅ 自分自身の編集（同じid）は重複扱いにしない
+    if (draft?.id && hit.id === draft.id) return null;
+
+    return hit;
+  }
 
   // ✅ async で onSubmit を await する（ScanPageで遷移しない問題の本丸）
   const handleSubmit = useCallback(async () => {
@@ -241,6 +262,15 @@ export default function PaintForm({
         <Input
           value={draft.barcode ?? ""}
           onChange={(e) => set({ barcode: e.target.value })}
+          onBlur={() => {
+            const hit = checkDuplicateBarcode(draft.barcode);
+            if (hit) {
+              setDupItem(hit);
+              setDupCode(String(draft.barcode ?? "").trim());
+              setDupOpen(true);
+              return false;
+            }
+          }}
           placeholder="EAN-13 / UPC"
         />
         <div className="text-xs text-muted-foreground">※ スキャン画面で自動入力もできます</div>
@@ -298,6 +328,72 @@ export default function PaintForm({
           </Button>
         ) : null}
       </div>
+      {dupOpen && dupItem ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => {
+              setDupOpen(false);
+              setDupItem(null);
+              // ✅ Noなら「キャンセルでクリア」
+              set({ barcode: "" });
+            }}
+          />
+
+          <Card className="relative w-full max-w-[420px]">
+            <CardContent className="p-4 space-y-3">
+              <div className="text-base font-semibold">登録済みのバーコードです</div>
+              <div className="text-sm text-muted-foreground">
+                同じバーコードが見つかりました。所持数を <span className="font-semibold">+1</span> しますか？
+              </div>
+
+              <div className="rounded-lg border border-border p-3 bg-muted/30">
+                <div className="text-sm font-medium">{dupItem.name}</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {dupItem.brand ? `メーカー: ${dupItem.brand} / ` : ""}
+                  barcode: {dupItem.barcode || dupCode}
+                  {typeof dupItem.qty === "number" ? ` / 所持数: ${dupItem.qty}` : ""}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    // No: キャンセル＆クリア
+                    setDupOpen(false);
+                    setDupItem(null);
+                    set({ barcode: "" });
+                  }}
+                >
+                  しない（キャンセル）
+                </Button>
+
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    // Yes: 既存qty+1
+                    const nextQty = (typeof dupItem.qty === "number" ? dupItem.qty : 0) + 1;
+                    update(dupItem.id, { qty: nextQty });
+
+                    setDupOpen(false);
+                    setDupItem(null);
+
+                    // ✅ 新規登録を続けさせないため、入力をクリア（ここは好みで name も消してOK）
+                    set({ barcode: "" });
+
+                    setError(null);
+                    onCancel?.();
+                  }}
+                >
+                  +1 する
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
     </div>
   );
 }

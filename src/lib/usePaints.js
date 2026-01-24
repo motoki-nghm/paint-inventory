@@ -421,6 +421,12 @@ export function usePaints() {
     setPaints(next);
   }
 
+  function findByBarcode(code) {
+    const key = String(code ?? "").trim();
+    if (!key) return null;
+    return paints.find((p) => String(p.barcode ?? "").trim() === key) ?? null;
+  }
+
   return {
     paints,
     filtered,
@@ -430,11 +436,11 @@ export function usePaints() {
     pinnedBrands,
     loaded,
     getById,
+    findByBarcode,
     add,
     update,
     remove,
     replaceAll,
-
     syncing,
     lastSyncedAt,
     unsyncedCount,
