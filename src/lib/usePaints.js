@@ -16,6 +16,7 @@ function loadBool(key, def) {
     return def;
   }
 }
+
 function saveBool(key, v) {
   try {
     localStorage.setItem(key, v ? "1" : "0");
@@ -37,8 +38,7 @@ function saveNum(key, v) {
 }
 
 function uuid() {
-  if (!crypto.randomUUID) throw new Error("crypto.randomUUID is not supported");
-  return crypto.randomUUID();
+  return crypto.randomUUID ? crypto.randomUUID() : `id_${Math.random().toString(16).slice(2)}_${Date.now()}`;
 }
 
 // Supabase row へ変換（DBのカラム名 snake_case に合わせる）
@@ -259,25 +259,105 @@ export function usePaints() {
     return paints.find((p) => p.id === id) ?? null;
   }
 
+  function normalizeBarcode(v) {
+    return String(v ?? "").trim();
+  }
+  function normalizeQty(v) {
+    if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   function add(input) {
+    const code = normalizeBarcode(input?.barcode);
+    const hasCode = !!code;
+    // ✅ 既存判定：同じバーコードがあるか？
+    if (hasCode) {
+      const existing = paints.find((p) => normalizeBarcode(p?.barcode) === code);
+
+      if (existing) {
+        const ok = window.confirm(
+          `このバーコードは既に登録済みです。\n\n` + `「OK」= 所持数を +1\n` + `「キャンセル」= 登録しない`,
+        );
+
+        if (!ok) {
+          // ✅ キャンセル：登録しない（呼び出し側で null を見て reset など）
+          return null;
+        }
+
+        // ✅ OK：qty を +1
+        const nextQty = normalizeQty(existing.qty) + 1;
+        update(existing.id, { qty: nextQty });
+
+        return existing; // 既存を返す（呼び出し側は一覧へ戻す等）
+      }
+    }
+
     const t = now();
+
+    const name = String(input.name ?? "").trim();
+    const barcode = String(input.barcode ?? "").trim(); // ✅ trimして扱う
+    const qtyInput = typeof input.qty === "number" ? input.qty : undefined;
+
+    if (!name) {
+      // ここは PaintForm 側で弾いてる想定だけど保険
+      return null;
+    }
+
+    // ✅ 重要：バーコードが「空のとき」は重複判定しない（空同士が全部重複扱いになるのを防ぐ）
+    if (barcode) {
+      const existing = paints.find((p) => String(p.barcode ?? "").trim() === barcode);
+      if (existing) {
+        const ok = confirm(
+          `このバーコードは既に登録されています。\n\n「はい」→ 既存の所持数を +1\n「いいえ」→ キャンセル`,
+        );
+        if (!ok) return null;
+
+        // ✅ qty を +1（未設定なら 1 にする）
+        const prevQtyNum = Number(existing.qty);
+        const nextQty = (Number.isFinite(prevQtyNum) ? prevQtyNum : 0) + 1;
+
+        update(existing.id, { qty: nextQty });
+        return existing;
+      }
+    }
+
     const item = {
       id: uuid(),
       createdAt: t,
       updatedAt: t,
+
       name: String(input.name ?? "").trim(),
-      brand: input.brand?.trim() || undefined,
+      brand: String(input.brand ?? "").trim() || undefined,
       type: input.type ?? "other",
-      system: input.system || "unknown",
-      color: normalizeColor(input.color), // ← ★ここ
-      note: input.note?.trim() || undefined,
-      capacity: input.capacity?.trim() || undefined,
-      qty: input.qty === "number" ? input.qty : undefined,
-      barcode: input.barcode?.trim() || undefined,
+      system: input.system ?? "unknown",
+
+      color: input.color ?? undefined,
+      note: String(input.note ?? "").trim() || undefined,
+      capacity: String(input.capacity ?? "").trim() || undefined,
+      qty: typeof input.qty === "number" ? input.qty : undefined,
+
+      barcode: barcode || undefined,
       purchasedAt: input.purchasedAt || undefined,
+
       imageDataUrl: input.imageDataUrl || undefined,
       imageUrl: input.imageUrl || undefined,
     };
+
+    setPaints((prev) => [item, ...prev]);
+
+    // ✅ ログイン中は upsert（失敗してもローカルは登録される）
+    void (async () => {
+      try {
+        const user = await getSessionUser();
+        if (!user) return;
+        await upsertPaintSupabase(item);
+      } catch (e) {
+        console.warn("supabase upsert failed (add)", e);
+      }
+    })();
+
+    return item;
   }
 
   function update(id, patch) {

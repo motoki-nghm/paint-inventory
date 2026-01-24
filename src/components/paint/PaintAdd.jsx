@@ -1,41 +1,39 @@
 import PaintForm from "@/components/paint/PaintForm";
-import { usePaints } from "@/lib/usePaints";
 
 export default function PaintAdd({
-  initial = {},
+  initial,
   onSubmit,
   onCancel,
   hint,
-  bindSubmit,
   brandOptions = [],
-  pinnedBrandOptions = [],
+  pinnedBrands = [],
+  bindSubmit,
 }) {
-  const base = {
+  const baseInitial = initial ?? {
     name: "",
     brand: "",
     type: "paint",
-    color: "",
+    system: "unknown",
+    color: "white",
     note: "",
     capacity: "",
-    qty: 1,
+    qty: undefined,
     barcode: "",
     purchasedAt: "",
-    imageUrl: undefined,
-    imageDataUrl: undefined,
-    system: "unknown",
-    ...initial,
+    imageUrl: "",
+    imageDataUrl: "",
   };
 
   return (
     <PaintForm
-      initial={base}
-      submitLabel="保存する"
+      initial={baseInitial}
+      submitLabel="登録"
       onSubmit={onSubmit}
       onCancel={onCancel}
       hint={hint}
-      bindSubmit={bindSubmit}
       brandOptions={brandOptions}
-      pinnedBrands={pinnedBrandOptions}
+      pinnedBrands={pinnedBrands}
+      bindSubmit={bindSubmit}
     />
   );
 }

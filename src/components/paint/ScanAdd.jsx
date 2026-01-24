@@ -7,25 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [], pinnedBrandOptions = [] }) {
+export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [], pinnedBrands = [] }) {
   const videoRef = useRef(null);
   const handleRef = useRef(null);
 
   const [barcode, setBarcode] = useState("");
   const [lookupName, setLookupName] = useState("");
   const [lookupSource, setLookupSource] = useState("");
-  const [lookupImageUrl, setLookupImageUrl] = useState("");
-
   const [status, setStatus] = useState("idle"); // idle|scanning|found|lookup|ready|error
   const [message, setMessage] = useState("");
+  const [lookupImageUrl, setLookupImageUrl] = useState("");
 
   const hint = useMemo(() => {
     if (status === "scanning") return "バーコードを枠内に合わせてください。連続検出は自動で抑制します。";
-    if (status === "lookup") return "商品情報を取得中…（失敗しても手入力で保存できます）";
+    if (status === "lookup") return "商品名を取得中…（失敗しても手入力で保存できます）";
     if (status === "ready" && barcode) {
       return lookupName
-        ? `取得できました：${lookupName}${lookupSource ? `（source: ${lookupSource}）` : ""}`
-        : "商品が見つかりませんでした。バーコードだけ反映しています。商品名を手入力して保存してください。";
+        ? `取得できました：${lookupName}（source: ${lookupSource}）`
+        : "商品名が取得できませんでした。バーコードだけ反映しているので、商品名を手入力して保存してください。";
     }
     return "カメラが起動しない場合は権限/ブラウザ/HTTPS を確認してください。";
   }, [status, barcode, lookupName, lookupSource]);
@@ -37,57 +36,39 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
     const video = videoRef.current;
     if (!video) return;
 
-    // 念のため前回ハンドルが残っていれば停止
-    try {
-      handleRef.current?.stop();
-    } catch {}
-    handleRef.current = null;
+    handleRef.current = await startBarcodeScan({
+      video,
+      repeatGuardMs: 1500,
+      onError: (m) => {
+        setStatus("error");
+        setMessage(m);
+      },
+      onResult: async (code) => {
+        setBarcode(code);
+        setStatus("found");
+        setMessage("");
 
-    try {
-      handleRef.current = await startBarcodeScan({
-        video,
-        repeatGuardMs: 1500,
-        onError: (m) => {
-          setStatus("error");
-          setMessage(m);
-        },
-        onResult: async (code) => {
-          setBarcode(code);
-          setStatus("found");
-          setMessage("");
+        try {
+          handleRef.current?.stop();
+        } catch {}
+        handleRef.current = null;
 
-          // stop once found
-          try {
-            handleRef.current?.stop();
-          } catch {}
-          handleRef.current = null;
+        setStatus("lookup");
+        const r = await productLookup(code);
 
-          setStatus("lookup");
+        if (r?.name) {
+          setLookupName(r.name);
+          setLookupSource(r.source);
+          setLookupImageUrl(r.imageUrl || "");
+        } else {
+          setLookupName("");
+          setLookupSource("");
+          setLookupImageUrl("");
+        }
 
-          let r = null;
-          try {
-            r = await productLookup(code);
-          } catch {
-            r = null;
-          }
-
-          if (r?.name) {
-            setLookupName(r.name);
-            setLookupSource(r.source || "");
-            setLookupImageUrl(r.imageUrl || ""); // ✅ ここが抜けてた
-          } else {
-            setLookupName("");
-            setLookupSource("");
-            setLookupImageUrl("");
-          }
-
-          setStatus("ready");
-        },
-      });
-    } catch (e) {
-      setStatus("error");
-      setMessage(e?.message || "カメラの起動に失敗しました。権限/HTTPS/ブラウザを確認してください。");
-    }
+        setStatus("ready");
+      },
+    });
   }
 
   useEffect(() => {
@@ -107,14 +88,17 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const initial = {
-    barcode: barcode || "",
-    name: lookupName || "",
-    imageUrl: lookupImageUrl || "",
-  };
-
-  // ✅ initial が変わったらフォームを確実に更新
-  const formKey = `${barcode}:${lookupName}:${lookupImageUrl}`;
+  const initial = useMemo(
+    () => ({
+      barcode: barcode || "",
+      name: lookupName || "",
+      imageUrl: lookupImageUrl || "",
+      color: "white",
+      type: "paint",
+      system: "unknown",
+    }),
+    [barcode, lookupName, lookupImageUrl],
+  );
 
   return (
     <div className="space-y-3">
@@ -140,11 +124,10 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
                 } catch {}
                 handleRef.current = null;
 
-                // ✅ reset state
                 setBarcode("");
                 setLookupName("");
                 setLookupSource("");
-                setLookupImageUrl(""); // ✅ これもリセット
+                setLookupImageUrl("");
                 setStatus("idle");
                 setMessage("");
 
@@ -163,14 +146,13 @@ export default function ScanAdd({ onSave, onCancel, bindSubmit, brandOptions = [
       <Separator />
 
       <PaintAdd
-        key={formKey}
         hint="スキャン結果はフォームに反映されています。必要なら編集して保存してください。"
         initial={initial}
         onSubmit={onSave}
         onCancel={onCancel}
         bindSubmit={bindSubmit}
         brandOptions={brandOptions}
-        pinnedBrandOptions={pinnedBrandOptions}
+        pinnedBrands={pinnedBrands}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,19 +29,12 @@ export default function PaintForm({
 }) {
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    setError(null);
-    if (!String(draft.name ?? "").trim()) {
-      setError("商品名は必須です。");
-      return;
-    }
-    onSubmit({ ...draft, name: String(draft.name).trim() });
-  };
+  const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
+  const brandListId = "brand-options";
 
-  useEffect(() => {
-    bindSubmit?.(handleSubmit);
-  }, [draft]);
+  const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
 
   const initialSig = useMemo(() => {
     return [
@@ -50,25 +43,51 @@ export default function PaintForm({
       initial?.name ?? "",
       initial?.imageUrl ?? "",
       initial?.imageDataUrl ? "1" : "0",
+      initial?.color ?? "",
+      initial?.brand ?? "",
     ].join("|");
   }, [initial]);
 
   useEffect(() => {
-    // ✅ 初期値が空ならホワイト（DEFAULT_COLOR）を入れて「keyが空」問題を回避
-    if (!draft?.color) set((d) => ({ ...d, color: DEFAULT_COLOR }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setDraft(initial);
+  }, [initialSig]);
 
-  const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
-  const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
-  const brandListId = "brand-options";
+  // ✅ async で onSubmit を await する（ScanPageで遷移しない問題の本丸）
+  const handleSubmit = useCallback(async () => {
+    console.log("[PaintForm] handleSubmit start", draft);
+
+    setError(null);
+    if (!String(draft.name ?? "").trim()) {
+      setError("商品名は必須です。");
+      return false;
+    }
+
+    try {
+      setSubmitting(true);
+      await onSubmit({ ...draft, name: String(draft.name).trim() });
+      console.log("[PaintForm] onSubmit awaited");
+      return true;
+    } catch (e) {
+      console.error(e);
+      setError("保存に失敗しました。もう一度お試しください。");
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  }, [draft, onSubmit]);
+
+  // ✅ fixed footer から叩けるように関数を渡す（常に最新draftの関数になる）
+  useEffect(() => {
+    bindSubmit?.(() => handleSubmit());
+    console.log("PaintForm bindSubmit called");
+  }, [bindSubmit, handleSubmit]);
 
   return (
     <div className="mx-auto w-full max-w-[360px] px-5 py-2 space-y-5">
       {hint ? <Alert>{hint}</Alert> : null}
       {error ? <Alert variant="danger">{error}</Alert> : null}
 
-      {/* 商品名 */}
+      {/* ✅ 商品名（必須） */}
       <div className="space-y-2">
         <label className="text-sm font-medium">商品名（必須）</label>
         <Input
@@ -80,11 +99,10 @@ export default function PaintForm({
 
       {/* ブランド / 種類 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {/* ✅ ブランド欄 */}
+        {/* ブランド */}
         <div className="space-y-2">
           <label className="text-sm font-medium">ブランド</label>
 
-          {/* ✅ 固定表示（よく使う） */}
           {pinnedBrands.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {pinnedBrands.map((b) => (
@@ -92,11 +110,7 @@ export default function PaintForm({
                   key={b}
                   type="button"
                   onClick={() => set({ brand: b })}
-                  className={[
-                    "px-3 py-1.5 rounded-full text-xs border",
-                    "border-border bg-muted hover:bg-muted/70",
-                    "text-foreground",
-                  ].join(" ")}
+                  className="px-3 py-1.5 rounded-full text-xs border border-border bg-muted hover:bg-muted/70 text-foreground"
                 >
                   {b}
                 </button>
@@ -104,7 +118,6 @@ export default function PaintForm({
             </div>
           ) : null}
 
-          {/* ✅ 候補付きInput（手入力OK） */}
           <Input
             list={brandListId}
             value={draft.brand ?? ""}
@@ -120,6 +133,7 @@ export default function PaintForm({
           <div className="text-xs text-muted-foreground">※ よく使うブランドは上に固定表示されます</div>
         </div>
 
+        {/* 種類 */}
         <div className="space-y-2">
           <label className="text-sm font-medium">種類</label>
           <Select value={draft.type ?? "other"} onValueChange={(v) => set({ type: v })}>
@@ -136,7 +150,8 @@ export default function PaintForm({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        {/* 系統 */}
+        <div className="space-y-2 sm:col-span-2">
           <label className="text-sm font-medium">系統</label>
           <Select value={draft.system ?? "unknown"} onValueChange={(v) => set({ system: v })}>
             <SelectTrigger>
@@ -157,11 +172,7 @@ export default function PaintForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">色</label>
-
-          <Select
-            value={isPresetColor(draft.color) ? draft.color : DEFAULT_COLOR}
-            onValueChange={(v) => set({ color: v })}
-          >
+          <Select value={(draft.color ?? DEFAULT_COLOR) || DEFAULT_COLOR} onValueChange={(v) => set({ color: v })}>
             <SelectTrigger>
               <SelectValue placeholder="色を選択" />
             </SelectTrigger>
@@ -174,7 +185,6 @@ export default function PaintForm({
             </SelectContent>
           </Select>
 
-          {/* ✅ プリセット外だけ手入力 */}
           {!isPresetColor(draft.color) ? (
             <Input
               value={draft.color ?? ""}
@@ -183,7 +193,7 @@ export default function PaintForm({
             />
           ) : null}
 
-          <div className="text-xs text-muted-foreground">※ プリセットに無い色は（手入力）で自由に入力できます</div>
+          <div className="text-xs text-muted-foreground">※ プリセットに無い色は手入力できます</div>
         </div>
 
         <div className="space-y-2">
@@ -259,12 +269,6 @@ export default function PaintForm({
           }}
         />
 
-        {draft.imageUrl && !draft.imageDataUrl ? (
-          <div className="text-xs text-muted-foreground">
-            ※ Yahooショッピングから取得した画像です。差し替える場合は下から画像を選択してください。
-          </div>
-        ) : null}
-
         {draft.imageDataUrl || draft.imageUrl ? (
           <div className="mt-2 space-y-2">
             <img
@@ -272,40 +276,17 @@ export default function PaintForm({
               className="w-full rounded-lg border border-border"
               alt="preview"
             />
-            <div className="flex gap-2">
-              {draft.imageDataUrl ? (
-                <Button variant="secondary" onClick={() => set({ imageDataUrl: undefined })}>
-                  画像を削除
-                </Button>
-              ) : (
-                <Button variant="secondary" onClick={() => set({ imageUrl: undefined })}>
-                  Yahoo画像を削除
-                </Button>
-              )}
-            </div>
           </div>
         ) : null}
       </div>
 
-      {/* ボタン（スマホは縦並びで押しやすく） */}
+      {/* 通常ボタン（フォーム内） */}
       <div className="pt-2 flex flex-col sm:flex-row gap-2">
-        <Button
-          className="w-full"
-          disabled={!canSave}
-          onClick={() => {
-            setError(null);
-            if (!String(draft.name ?? "").trim()) {
-              setError("商品名は必須です。");
-              return;
-            }
-            onSubmit({ ...draft, name: String(draft.name).trim() });
-          }}
-        >
-          {submitLabel}
+        <Button className="w-full" disabled={!canSave || submitting} onClick={handleSubmit}>
+          {submitting ? "保存中…" : submitLabel}
         </Button>
-
         {onCancel ? (
-          <Button variant="secondary" className="w-full" onClick={onCancel}>
+          <Button variant="secondary" className="w-full" onClick={onCancel} disabled={submitting}>
             キャンセル
           </Button>
         ) : null}

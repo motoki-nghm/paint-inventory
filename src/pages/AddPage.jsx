@@ -17,21 +17,30 @@ export default function AddPage() {
       <Container className="pb-28">
         <PaintAdd
           onSubmit={(draft) => {
+            console.log("AddPage onSubmit draft", draft);
+            const r = add(draft);
+            console.log("add() returned", r);
             add(draft);
             nav("/");
           }}
           onCancel={() => nav("/")}
+          brandOptions={brands}
+          pinnedBrands={pinnedBrands}
           bindSubmit={(fn) => {
             submitRef.current = fn;
           }}
-          brandOptions={brands}
-          pinnedBrandOptions={pinnedBrands}
         />
       </Container>
 
       {/* fixed 登録ボタン */}
       <FixedFooter>
-        <Button className="w-full h-12 text-base" onClick={() => submitRef.current?.()}>
+        <Button
+          className="w-full h-12 text-base"
+          onClick={async () => {
+            const ok = await submitRef.current?.();
+            // ok が false のときはバリデーションで止まってる
+          }}
+        >
           登録する
         </Button>
       </FixedFooter>

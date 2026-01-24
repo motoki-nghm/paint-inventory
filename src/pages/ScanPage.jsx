@@ -24,6 +24,7 @@ export default function ScanPage() {
               // ✅ 重複で「キャンセル」されたら add() が null を返す
               if (!r) {
                 // ScanAddの入力を確実にクリアしたいので、/scan に再遷移して実質リマウント
+                alert("キャンセルしました");
                 nav(`/scan?reset=${Date.now()}`, { replace: true });
                 return;
               }
@@ -47,7 +48,13 @@ export default function ScanPage() {
           <Button variant="secondary" className="w-full h-12" onClick={() => nav("/")}>
             戻る
           </Button>
-          <Button className="w-full h-12 text-base" onClick={() => submitRef.current?.()}>
+          <Button
+            className="w-full h-12 text-base"
+            onClick={async () => {
+              const ok = await submitRef.current?.();
+              // ok=falseならフォーム側でエラー出てる
+            }}
+          >
             登録する
           </Button>
         </div>
