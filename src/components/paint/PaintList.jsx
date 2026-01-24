@@ -1,10 +1,12 @@
 import PaintCard from "@/components/paint/PaintCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { COLOR_PRESETS, colorLabel } from "@/lib/db";
+import { COLOR_PRESETS, colorLabel, isPresetColor } from "@/lib/db";
 
 function groupLabel(groupBy, key) {
   if (!key) return "未設定";
-  if (groupBy === "color") return colorLabel(key);
+  if (groupBy === "color") {
+    return isPresetColor(key) ? colorLabel(key) : `${key}（手入力）`;
+  }
   return key;
 }
 

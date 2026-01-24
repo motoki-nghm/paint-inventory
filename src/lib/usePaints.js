@@ -1,6 +1,5 @@
-// src/lib/usePaints.js（or PaintsProvider内のhook部分に相当）
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_FILTERS } from "@/lib/db";
+import { DEFAULT_FILTERS, normalizeColor, DEFAULT_COLOR } from "@/lib/db";
 import { loadState, saveState } from "@/lib/storage";
 import { contains, now } from "@/lib/utils";
 import { getSessionUser, fetchPaintsSupabase, upsertPaintSupabase, deletePaintSupabase } from "@/lib/paintRepoSupabase";
@@ -82,23 +81,38 @@ export function usePaints() {
     (async () => {
       try {
         const user = await getSessionUser();
+
+        // ✅ ログイン中：クラウド優先
         if (user) {
           const cloud = await fetchPaintsSupabase();
-          // cloud側データが system 欠けてても壊れないよう保険
-          const normalized = (cloud || []).map((p) => ({ system: "unknown", ...p }));
-          setPaints(normalized);
+
+          // ✅ ここで正規化（クラウド由来でも色を揃える）
+          const normalizedCloud = (cloud || []).map((p) => ({
+            system: "unknown",
+            ...p,
+            color: normalizeColor(p.color),
+          }));
+
+          setPaints(normalizedCloud);
           setLoaded(true);
           return;
         }
       } catch {
-        // fallthrough
+        // Supabaseが落ちててもローカルへフォールバック
       }
 
+      // ✅ 未ログイン：ローカル
       const state = await loadState();
-      const normalized = (state.paints || []).map((p) => ({ system: "unknown", ...p }));
-      setPaints(normalized);
+      const normalizedLocal = (state.paints || []).map((p) => ({
+        system: "unknown",
+        ...p,
+        color: normalizeColor(p.color),
+      }));
+
+      setPaints(normalizedLocal);
       setLoaded(true);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ローカル永続化：未ログイン時だけ
@@ -247,128 +261,66 @@ export function usePaints() {
 
   function add(input) {
     const t = now();
-
-    const normalizedBarcode = String(input.barcode ?? "").trim();
-    const normalizedName = String(input.name ?? "").trim();
-
-    // バーコードがある場合のみ重複判定
-    if (normalizedBarcode) {
-      const existing = paints.find((p) => String(p?.barcode ?? "").trim() === normalizedBarcode);
-
-      if (existing) {
-        const label = existing.name ? `「${existing.name}」` : "この商品";
-        const ok = window.confirm(
-          `登録済みのバーコードです。\n${label}\n\n数量を +1 して更新しますか？\n（OK: +1 / キャンセル: 追加しない）`,
-        );
-
-        // No(キャンセル) → 追加しない（呼び出し側でクリア）
-        if (!ok) return null;
-
-        // Yes → 既存の qty を +1（未設定なら 1 にする）
-        const nextQty = typeof existing.qty === "number" ? existing.qty + 1 : 1;
-
-        const updated = {
-          ...existing,
-          qty: nextQty,
-          updatedAt: t,
-        };
-
-        setPaints((prev) => prev.map((p) => (p.id === existing.id ? updated : p)));
-
-        // Supabaseに反映（ログイン中のみ）
-        void (async () => {
-          try {
-            const user = await getSessionUser();
-            if (!user) return;
-            await upsertPaintSupabase(updated);
-          } catch (e) {
-            console.warn("supabase upsert failed (duplicate qty+1)", e);
-          }
-        })();
-
-        return updated;
-      }
-    }
-
-    // ここから通常追加
-    if (!normalizedName) {
-      // 呼び出し側で弾いてるが念のため
-      throw new Error("name is required");
-    }
-
     const item = {
       id: uuid(),
       createdAt: t,
       updatedAt: t,
-      name: normalizedName,
+      name: String(input.name ?? "").trim(),
       brand: input.brand?.trim() || undefined,
       type: input.type ?? "other",
       system: input.system || "unknown",
-      color: input.color?.trim() || undefined,
+      color: normalizeColor(input.color), // ← ★ここ
       note: input.note?.trim() || undefined,
       capacity: input.capacity?.trim() || undefined,
-      qty: typeof input.qty === "number" ? input.qty : undefined,
-      barcode: normalizedBarcode || undefined,
+      qty: input.qty === "number" ? input.qty : undefined,
+      barcode: input.barcode?.trim() || undefined,
       purchasedAt: input.purchasedAt || undefined,
       imageDataUrl: input.imageDataUrl || undefined,
       imageUrl: input.imageUrl || undefined,
     };
-
-    setPaints((prev) => [item, ...prev]);
-
-    void (async () => {
-      try {
-        const user = await getSessionUser();
-        if (!user) return;
-        await upsertPaintSupabase(item);
-      } catch (e) {
-        console.warn("supabase upsert failed (add)", e);
-      }
-    })();
-
-    return item;
   }
 
   function update(id, patch) {
-    let nextItem = null;
-
     setPaints((prev) =>
       prev.map((p) => {
         if (p.id !== id) return p;
 
-        nextItem = {
+        const next = {
           ...p,
           ...patch,
+
           name: String(patch.name ?? p.name).trim(),
           brand: (patch.brand ?? p.brand)?.trim() || undefined,
-          color: (patch.color ?? p.color)?.trim() || undefined,
+
+          // ✅ ここが重要：更新でも必ず正規化
+          color: normalizeColor(patch.color ?? p.color ?? DEFAULT_COLOR),
+
           note: (patch.note ?? p.note)?.trim() || undefined,
           capacity: (patch.capacity ?? p.capacity)?.trim() || undefined,
           barcode: (patch.barcode ?? p.barcode)?.trim() || undefined,
           purchasedAt: patch.purchasedAt ?? p.purchasedAt,
           qty: typeof patch.qty === "number" ? patch.qty : p.qty,
           type: patch.type ?? p.type,
-          system: patch.system ?? p.system,
           imageDataUrl: patch.imageDataUrl ?? p.imageDataUrl,
           imageUrl: patch.imageUrl ?? p.imageUrl,
+          system: patch.system ?? p.system,
           updatedAt: now(),
         };
 
-        return nextItem;
+        // ✅ update後の “確定した next” を Supabase に流す
+        void (async () => {
+          try {
+            const user = await getSessionUser();
+            if (!user) return;
+            await upsertPaintSupabase(next);
+          } catch (e) {
+            console.warn("supabase upsert failed (update)", e);
+          }
+        })();
+
+        return next;
       }),
     );
-
-    // ✅ nextItem をそのまま upsert（stale参照を排除）
-    void (async () => {
-      try {
-        if (!nextItem) return;
-        const user = await getSessionUser();
-        if (!user) return;
-        await upsertPaintSupabase(nextItem);
-      } catch (e) {
-        console.warn("supabase upsert failed (update)", e);
-      }
-    })();
   }
 
   function remove(id) {

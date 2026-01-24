@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { normalizeColor } from "@/lib/db";
 
 function fromRow(r) {
   return {
@@ -9,7 +10,7 @@ function fromRow(r) {
     brand: r.brand ?? "",
     type: r.type ?? "other",
     system: r.system ?? "unknown",
-    color: r.color ?? "",
+    color: normalizeColor(r.color),
     note: r.note ?? "",
     capacity: r.capacity ?? "",
     qty: typeof r.qty === "number" ? r.qty : undefined,

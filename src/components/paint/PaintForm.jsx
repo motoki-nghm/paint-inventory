@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Alert } from "@/components/ui/alert";
 import { clamp } from "@/lib/utils";
-import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS, COLOR_PRESETS, isPresetColor } from "@/lib/db";
+import { PAINT_TYPES, PAINT_SYSTEMS, PAINT_SYSTEM_LABELS, DEFAULT_COLOR, COLOR_PRESETS, isPresetColor } from "@/lib/db";
 
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -54,8 +54,10 @@ export default function PaintForm({
   }, [initial]);
 
   useEffect(() => {
-    setDraft(initial);
-  }, [initialSig]);
+    // ✅ 初期値が空ならホワイト（DEFAULT_COLOR）を入れて「keyが空」問題を回避
+    if (!draft?.color) set((d) => ({ ...d, color: DEFAULT_COLOR }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const canSave = useMemo(() => String(draft.name ?? "").trim().length > 0, [draft.name]);
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
@@ -69,13 +71,11 @@ export default function PaintForm({
       {/* 商品名 */}
       <div className="space-y-2">
         <label className="text-sm font-medium">商品名（必須）</label>
-        {!isPresetColor(draft.color) ? (
-          <Input
-            value={draft.color ?? ""}
-            onChange={(e) => set({ color: e.target.value })}
-            placeholder="例）C1 ホワイト / つや消し黒 / 明るい青"
-          />
-        ) : null}
+        <Input
+          value={draft.name ?? ""}
+          onChange={(e) => set({ name: e.target.value })}
+          placeholder="例）Mr.カラー C1 ホワイト"
+        />
       </div>
 
       {/* ブランド / 種類 */}
@@ -157,7 +157,11 @@ export default function PaintForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="text-sm font-medium">色</label>
-          <Select value={draft.color ?? ""} onValueChange={(v) => set({ color: v })}>
+
+          <Select
+            value={isPresetColor(draft.color) ? draft.color : DEFAULT_COLOR}
+            onValueChange={(v) => set({ color: v })}
+          >
             <SelectTrigger>
               <SelectValue placeholder="色を選択" />
             </SelectTrigger>
@@ -170,17 +174,18 @@ export default function PaintForm({
             </SelectContent>
           </Select>
 
-          {/* カスタム入力（プリセットに無い時だけ表示） */}
-          {!COLOR_PRESETS.includes(draft.color ?? "") ? (
+          {/* ✅ プリセット外だけ手入力 */}
+          {!isPresetColor(draft.color) ? (
             <Input
               value={draft.color ?? ""}
               onChange={(e) => set({ color: e.target.value })}
-              placeholder="例）C1 ホワイト / つや消し黒 / 明るい青"
+              placeholder="例）スカイブルー / つや消し黒 など"
             />
           ) : null}
 
           <div className="text-xs text-muted-foreground">※ プリセットに無い色は（手入力）で自由に入力できます</div>
         </div>
+
         <div className="space-y-2">
           <label className="text-sm font-medium">容量</label>
           <Input

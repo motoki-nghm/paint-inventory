@@ -26,6 +26,8 @@ export const DEFAULT_FILTERS = {
   system: "all",
 };
 
+export const DEFAULT_COLOR = "white";
+
 export const COLOR_PRESETS = [
   { value: "white", label: "ホワイト" },
   { value: "black", label: "ブラック" },
@@ -54,14 +56,42 @@ export const COLOR_PRESETS = [
   { value: "metallicGreen", label: "メタリックグリーン" },
 ];
 
-export function colorLabel(value) {
-  const v = String(value ?? "").trim();
-  if (!v) return "未設定";
-  const hit = COLOR_PRESETS.find((c) => c.value === v);
-  return hit ? hit.label : v; // ←プリセット外は手入力文字列をそのまま表示
+const VALUE_CANON = new Map(COLOR_PRESETS.map((c) => [String(c.value).trim().toLowerCase(), c.value]));
+
+const VALUE_SET = new Set(Array.from(VALUE_CANON.keys()));
+
+const LABEL_TO_VALUE = new Map(COLOR_PRESETS.map((c) => [String(c.label).trim().toLowerCase(), c.value]));
+
+export function isPresetColor(v) {
+  const key = String(v ?? "")
+    .trim()
+    .toLowerCase();
+  return VALUE_SET.has(key);
 }
 
-export function isPresetColor(value) {
-  const v = String(value ?? "").trim();
-  return COLOR_PRESETS.some((c) => c.value === v);
+export function colorLabel(v) {
+  const key = String(v ?? "")
+    .trim()
+    .toLowerCase();
+  const canon = VALUE_CANON.get(key); // ← "clearcolor" でも "clearColor" に戻せる
+  const hit = COLOR_PRESETS.find((c) => c.value === canon);
+  return hit?.label ?? (key ? String(v).trim() : "未設定");
+}
+
+export function normalizeColor(v) {
+  const raw = String(v ?? "").trim();
+  if (!raw) return DEFAULT_COLOR;
+
+  const key = raw.toLowerCase();
+
+  // value一致（大小/キャメル差異を吸収）
+  const canon = VALUE_CANON.get(key);
+  if (canon) return canon;
+
+  // label一致（「ホワイト」→ white）
+  const mapped = LABEL_TO_VALUE.get(key);
+  if (mapped) return mapped;
+
+  // プリセット外はそのまま（手入力色）
+  return raw;
 }
