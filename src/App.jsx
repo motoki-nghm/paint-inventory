@@ -6,26 +6,38 @@ import ScanPage from "@/pages/ScanPage";
 import DetailPage from "@/pages/DetailPage";
 import EditPage from "@/pages/EditPage";
 import SettingsPage from "@/pages/SettingsPage";
+import LoginPage from "@/pages/LoginPage";
 import { PaintsProvider } from "@/lib/PaintsProvider";
-import AuthCallbackPage from "@/pages/AuthCallbackPage";
+import { AuthProvider, useAuth } from "@/lib/AuthProvider";
+
+function ProtectedLayout() {
+  const { user, initialized } = useAuth();
+  if (!initialized) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return (
+    <PaintsProvider>
+      <AppShell />
+    </PaintsProvider>
+  );
+}
 
 export default function App() {
   return (
-    <PaintsProvider>
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route element={<AppShell />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route element={<ProtectedLayout />}>
             <Route path="/" element={<ListPage />} />
             <Route path="/add" element={<AddPage />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/item/:id" element={<DetailPage />} />
             <Route path="/item/:id/edit" element={<EditPage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </PaintsProvider>
+    </AuthProvider>
   );
 }

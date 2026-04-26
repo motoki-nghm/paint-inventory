@@ -4,77 +4,42 @@
 
 @layer base {
   :root {
-    /* neutral / blue-gray */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* Always dark: zinc-950 / zinc-900 / zinc-800 + amber-500 accent */
+    --background: 240 5.9% 4.1%;
+    --foreground: 240 5.9% 96.1%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card: 240 5.9% 10.8%;
+    --card-foreground: 240 5.9% 96.1%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 240 5.9% 10.8%;
+    --popover-foreground: 240 5.9% 96.1%;
 
-    /* primary: blue-gray */
-    --primary: 215 28% 17%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 38 92.2% 50.2%;
+    --primary-foreground: 240 5.9% 4.1%;
 
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 240 3.7% 16.1%;
+    --secondary-foreground: 240 5.9% 96.1%;
 
-    --muted: 214 32% 93%;
-    --muted-foreground: 215 16% 40%;
+    --muted: 240 3.7% 16.1%;
+    --muted-foreground: 240 5% 64.9%;
 
-    --accent: 214 32% 91%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 240 3.7% 16.1%;
+    --accent-foreground: 240 5.9% 96.1%;
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214 32% 88%;
-    --input: 214 32% 88%;
-
-    /* focus ring: muted blue */
-    --ring: 213 27% 40%;
+    --border: 240 3.7% 16.1%;
+    --input: 240 3.7% 16.1%;
+    --ring: 38 92.2% 50.2%;
 
     --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-
-    /* primary: slightly brighter in dark */
-    --primary: 210 40% 98%;
-    --primary-foreground: 222 47% 11%;
-
-    --secondary: 217 28% 14%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 28% 14%;
-    --muted-foreground: 215 20% 70%;
-
-    --accent: 217 28% 14%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 28% 16%;
-    --input: 217 28% 16%;
-
-    /* focus ring: subtle blue */
-    --ring: 213 27% 65%;
   }
 
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
