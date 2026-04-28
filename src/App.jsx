@@ -7,6 +7,7 @@ import DetailPage from "@/pages/DetailPage";
 import EditPage from "@/pages/EditPage";
 import SettingsPage from "@/pages/SettingsPage";
 import LoginPage from "@/pages/LoginPage";
+import AuthCallbackPage from "@/pages/AuthCallbackPage";
 import { PaintsProvider } from "@/lib/PaintsProvider";
 import { AuthProvider, useAuth } from "@/lib/AuthProvider";
 
@@ -27,6 +28,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route element={<ProtectedLayout />}>
             <Route path="/" element={<ListPage />} />
             <Route path="/add" element={<AddPage />} />
