@@ -1,16 +1,65 @@
-# React + Vite
+# Paint Inventory
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+プラモデル塗料・資材インベントリ管理 PWA。React + Vite + TypeScript +
+TailwindCSS + Zustand + Supabase 構成。
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| 領域       | 技術                                            |
+| ---------- | ----------------------------------------------- |
+| Framework  | React 19, Vite 7, TypeScript 5                  |
+| UI         | TailwindCSS, Radix Primitives, lucide-react     |
+| State      | Zustand (selector hooks)                        |
+| Validation | Zod                                             |
+| Auth       | Supabase Auth (PKCE) — Email OTP + Google OAuth |
+| Database   | Supabase Postgres + RLS                         |
+| Camera     | `BarcodeDetector` w/ ZXing fallback             |
+| Lookup     | Yahoo Shopping (Vercel serverless proxy)        |
+| PWA        | vite-plugin-pwa (Workbox autoUpdate)            |
+| Notify     | sonner (toast)                                  |
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+cp .env.example .env.local       # fill VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+npm run dev
+```
 
-## Expanding the ESLint configuration
+DB マイグレーションは `supabase/migrations/` を `supabase db push` で適用してください。
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Scripts
+
+| Command             | Description                       |
+| ------------------- | --------------------------------- |
+| `npm run dev`       | Dev server (Vite)                 |
+| `npm run build`     | Type-check + production build     |
+| `npm run typecheck` | tsc only                          |
+| `npm run lint`      | ESLint                            |
+| `npm run preview`   | Preview the production build      |
+
+## Architecture
+
+```
+src/
+  app.tsx              # routes + providers
+  main.tsx             # entry
+  pages/               # route-level components
+  components/
+    ui/                # primitives (button, input, dialog, …)
+    layout/            # AppShell / Header / BottomNav
+    paint/             # domain components (PaintCard / PaintForm / ScanView …)
+  lib/                 # supabase client, validators, image, barcode, …
+  stores/              # Zustand stores (paints) + Auth context
+  types/               # paint domain types
+supabase/migrations/   # SQL migrations + RLS policies
+api/                   # Vercel serverless functions (yahoo-lookup)
+```
+
+## Security
+
+詳細は [SECURITY.md](./SECURITY.md) を参照。
+
+---
+
+> "Everything's in order. Don't embarrass me." — BISCUIT
