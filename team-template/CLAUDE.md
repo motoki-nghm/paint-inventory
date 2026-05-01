@@ -365,10 +365,10 @@ Standard:   Production-level. No shortcuts.
 | クロロ      | Database          | Schema・Migration・RLS         | DB 設計・変更時  |
 | フェイタン  | Security          | Auth・脆弱性・監査             | リリース前・変更後 |
 | ナックル    | QA / Reviewer     | レビュー・テスト・負債          | 実装完了後       |
-| ビスケット  | Secretary / PM    | 進捗・ドキュメント              | 中〜大タスク     |
+| ビスケ  | Secretary / PM    | 進捗・ドキュメント              | 中〜大タスク     |
 | ネオン      | Content Writer    | ブログ・記事・コピー            | コンテンツ制作時 |
 | コムギ      | Design            | レイアウト・デザイン            | デザイン制作時   |
 
 ---
 
-*"チームは一人の天才より強い。念は個人の力だが、グリードアイランドはチームで攻略された。"*
+*"チームは一人の天才より強い。"*
