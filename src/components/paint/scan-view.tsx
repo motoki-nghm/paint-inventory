@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { startBarcodeScan, type ScanHandle } from "@/lib/barcode";
-import { productLookup } from "@/lib/product-lookup";
+import { productLookup, type LookupOutcome } from "@/lib/product-lookup";
 import { isLikelyJan } from "@/lib/validators";
 
 type ScanStatus = "idle" | "scanning" | "lookup" | "ready" | "error";
@@ -15,6 +15,7 @@ export interface ScanResult {
   name: string;
   imageUrl: string;
   source: string;
+  outcome: LookupOutcome["kind"];
 }
 
 interface ScanViewProps {
@@ -66,21 +67,12 @@ export function ScanView({ onResult, resetSignal = 0 }: ScanViewProps) {
         setTorchOn(false);
 
         setStatus("lookup");
-        let name = "";
-        let imageUrl = "";
-        let source = "";
-        try {
-          const r = await productLookup(raw);
-          if (r) {
-            name = r.name;
-            imageUrl = r.imageUrl;
-            source = r.source;
-          }
-        } catch {
-          // ignore
-        }
+        const outcome = await productLookup(raw);
+        const name = outcome.kind === "found" ? outcome.name : "";
+        const imageUrl = outcome.kind === "found" ? outcome.imageUrl : "";
+        const source = outcome.kind === "found" ? outcome.source : "";
         setStatus("ready");
-        onResult({ barcode: raw, name, imageUrl, source });
+        onResult({ barcode: raw, name, imageUrl, source, outcome: outcome.kind });
       },
     });
     handleRef.current = handle;

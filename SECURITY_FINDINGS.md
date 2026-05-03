@@ -39,9 +39,9 @@ _現在アクティブな所見はありません。_
 - **修正:** `createClient` で `auth.flowType = "pkce"` を明示。
   `AuthCallbackPage` で `exchangeCodeForSession` を呼ぶフローへ統一。
 
-### [SEC-003] /api/yahoo-lookup の入力検証不足 — HIGH ✅
+### [SEC-003] /api/product-lookup の入力検証不足 — HIGH ✅
 
-- **場所:** `api/yahoo-lookup.ts`
+- **場所:** `api/product-lookup.ts` (旧 `yahoo-lookup`)
 - **攻撃ベクター:** 任意文字列を投げて upstream にフォワードできる、レート制限なし
 - **修正:**
   - `JAN_RE = /^(\d{8}|\d{12,14})$/` で正規表現バリデーション
@@ -68,6 +68,27 @@ _現在アクティブな所見はありません。_
 ### [SEC-006] 危険な動作の `alert/confirm` — LOW ✅
 
 - **修正:** Radix Dialog ベースの確認モーダルへ統一し、誤操作を防ぎつつ操作意図を明示。
+
+### [SEC-007] CSP `img-src` の allowlist が狭く正規画像が遮断 — MEDIUM ✅
+
+- **発見日:** 2026-05-03
+- **場所:** `vercel.json`
+- **症状:** Yahoo / 楽天画像 CDN のサブドメインが許可されておらず、
+  正常な商品画像までブロックされ「画像が出ない」と誤認させていた。
+- **攻撃ベクター:** 直接の脆弱性ではないが、ユーザーが CSP を緩めて回避すると
+  本来不要なドメインが解禁され攻撃面が増える恐れがあった。
+- **修正:** `img-src` を `https://*.yimg.jp https://*.rakuten.co.jp https://*.r10s.jp` に
+  限定したワイルドカードで拡張。Yahoo Shopping API ドメインなど client が直接
+  叩かないものは img-src から削除。
+
+### [SEC-008] 商品検索 API のフェイルモードが沈黙 — LOW ✅
+
+- **発見日:** 2026-05-03
+- **場所:** `src/lib/product-lookup.ts`, `src/components/paint/scan-view.tsx`
+- **症状:** API キー未設定 / レート制限 / upstream エラーがすべて「商品名なし」に
+  丸まり、ユーザーにも管理者にも原因が伝わらない。
+- **修正:** discriminated union (`LookupOutcome`) で 7 種の結果を返し、scan ページで
+  ケースごとに toast を出す (`not_configured` / `rate_limited` / `upstream_error` 等)。
 
 ---
 

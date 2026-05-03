@@ -45,7 +45,7 @@ _なし_
 | ID    | 場所                            | コスト | 理由                                                       | 提案修正                                     |
 | ----- | ------------------------------- | ------ | ---------------------------------------------------------- | -------------------------------------------- |
 | DEBT1 | `src/types/paint.ts:image_data_url` | HIGH   | 大きい base64 を行に格納するとクラウド DB の I/O が太る   | Supabase Storage への移管 + 公開 URL 参照    |
-| DEBT2 | `api/yahoo-lookup.ts` rate limiter | MEDIUM | in-memory のため複数インスタンスで共有されない            | Upstash Redis 等の分散レートリミッタへ置換  |
+| DEBT2 | `api/product-lookup.ts` rate limiter | MEDIUM | in-memory のため複数インスタンスで共有されない          | Upstash Redis 等の分散レートリミッタへ置換  |
 | DEBT3 | テスト未整備                       | MEDIUM | 回帰検出が手動                                            | Vitest + Playwright をミニマム導入           |
 
 ### 総評
