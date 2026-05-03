@@ -58,14 +58,36 @@ export function ScanPage() {
               setDuplicate({ item: existing, code: r.barcode });
               return;
             }
-            if (r.name) {
-              toast.success(`商品名を取得: ${r.name}`, {
-                description: r.source,
-              });
-            } else if (r.barcode) {
-              toast.message("バーコードを読み取りました", {
-                description: "商品名は手入力してください",
-              });
+            switch (r.outcome) {
+              case "found":
+                toast.success(`商品名を取得: ${r.name}`, { description: r.source });
+                break;
+              case "not_found":
+                toast.message("商品名が見つかりませんでした", {
+                  description: "バーコードのみ反映しました。手入力で登録してください。",
+                });
+                break;
+              case "not_configured":
+                toast.warning("商品検索 API が未設定です", {
+                  description: "Vercel に YAHOO_APP_ID または RAKUTEN_APP_ID を設定してください",
+                });
+                break;
+              case "rate_limited":
+                toast.warning("検索回数の上限に達しました", {
+                  description: "1 分ほど待ってから再試行してください",
+                });
+                break;
+              case "upstream_error":
+              case "network_error":
+                toast.error("商品検索に失敗しました", {
+                  description: "バーコードのみ反映しました。手入力で登録できます。",
+                });
+                break;
+              case "invalid_barcode":
+                toast.message("バーコードを読み取りました", {
+                  description: "JAN 形式ではないため検索をスキップしました",
+                });
+                break;
             }
           }}
         />
