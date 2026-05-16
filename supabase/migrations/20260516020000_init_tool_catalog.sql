@@ -7,6 +7,9 @@
 -- =====================================================================
 
 create extension if not exists "pgcrypto";
+-- pg_trgm: 部分一致検索用 GIN インデックス。Supabase では拡張のみ提供で
+-- デフォルト無効なので、インデックス作成より先に enable しておく。
+create extension if not exists pg_trgm;
 
 create table if not exists public.tool_catalog (
   id              uuid primary key default gen_random_uuid(),
@@ -19,7 +22,7 @@ create table if not exists public.tool_catalog (
                     'nipper','file','tweezers','decal','cement',
                     'panel_line','masking','airbrush','polish','other'
                   )) default 'other',
-  jan             text check (jan is null or jan ~ '^\d{8}$|^\d{12,14}$'),
+  jan             text check (jan is null or jan ~ '^[0-9]{8}$|^[0-9]{12,14}$'),
   image_url       text check (image_url is null or length(image_url) <= 2048),
   product_url     text check (product_url is null or length(product_url) <= 2048),
   price_yen       integer check (price_yen is null or (price_yen >= 0 and price_yen <= 10000000)),
@@ -35,11 +38,9 @@ create table if not exists public.tool_catalog (
 create index if not exists tool_catalog_category_active_idx
   on public.tool_catalog (category, is_active, last_seen_at desc);
 
--- 簡易全文検索 (日本語形態素解析は使えないので前方一致 + ILIKE 想定)
+-- 簡易全文検索 (pg_trgm による部分一致 ILIKE 用)
 create index if not exists tool_catalog_name_trgm_idx
   on public.tool_catalog using gin (name gin_trgm_ops);
--- pg_trgm 拡張 (Supabase で有効化済み)
-create extension if not exists pg_trgm;
 
 -- JAN で重複参照する用 (アプリ側 paints とのクロス参照)
 create index if not exists tool_catalog_jan_idx
