@@ -14,7 +14,8 @@ export function FixedFooter({ children, className }: FixedFooterProps) {
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-[64px] z-30 border-t border-border/70 bg-background/95 backdrop-blur-md",
+        // BottomNav (h≈56px) + 中央 FAB (translate-y-5) を考慮して 84px のマージンを確保
+        "fixed inset-x-0 bottom-[84px] z-30 border-t border-border/70 bg-background/95 backdrop-blur-md",
         "safe-bottom",
         className,
       )}
