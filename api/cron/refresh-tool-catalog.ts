@@ -112,6 +112,27 @@ function extractJan(name: string): string | null {
   return m ? m[1] : null;
 }
 
+// DB の check 制約 '^[0-9]{8}$|^[0-9]{12,14}$' を満たすかを事前検証。
+// 空文字 / 規定外桁数 / 非数字混入はすべて null に倒す。
+const JAN_RE = /^(\d{8}|\d{12,14})$/;
+function sanitizeJan(v: string | null | undefined): string | null {
+  if (v == null) return null;
+  const t = String(v).trim();
+  if (!t) return null;
+  return JAN_RE.test(t) ? t : null;
+}
+
+// 長すぎる文字列を制限値で切る (URL は中身が壊れるので null に倒す方が安全)
+function cap(v: string | null | undefined, max: number): string | null {
+  if (!v) return null;
+  const t = String(v).trim();
+  if (!t) return null;
+  return t.length > max ? null : t;
+}
+function truncate(v: string, max: number): string {
+  return v.length > max ? v.slice(0, max) : v;
+}
+
 // -----------------------------------------------------------------------------
 // Yahoo / 楽天 API クライアント
 // -----------------------------------------------------------------------------
@@ -262,16 +283,20 @@ interface UpsertRow {
 }
 
 function normalizeHit(hit: RawHit, category: ToolCategory, query: string): UpsertRow {
+  const rawBrand = hit.brand ?? refineBrand(hit.name);
   return {
     source: hit.source,
-    source_id: hit.source_id,
-    name: hit.name,
-    brand: hit.brand ?? refineBrand(hit.name),
+    source_id: truncate(hit.source_id, 200),
+    name: truncate(hit.name, 400),
+    brand: rawBrand ? truncate(rawBrand, 120) : null,
     category: refineCategory(hit.name, category),
-    jan: hit.jan,
-    image_url: hit.image_url,
-    product_url: hit.product_url,
-    price_yen: hit.price_yen,
+    jan: sanitizeJan(hit.jan),
+    image_url: cap(hit.image_url, 2048),
+    product_url: cap(hit.product_url, 2048),
+    price_yen:
+      typeof hit.price_yen === "number" && hit.price_yen >= 0 && hit.price_yen <= 10_000_000
+        ? hit.price_yen
+        : null,
     search_keywords: query,
     last_seen_at: new Date().toISOString(),
     is_active: true,
