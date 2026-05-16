@@ -18,6 +18,7 @@ interface ToolsState {
   initialize: () => Promise<void>;
   reload: () => Promise<void>;
   add: (input: ToolDraft) => Tool;
+  bulkAdd: (inputs: ToolDraft[]) => Tool[];
   update: (id: string, patch: Partial<ToolDraft>) => void;
   remove: (id: string) => void;
   setFilters: (next: ToolFilters) => void;
@@ -85,6 +86,34 @@ export const useToolsStore = create<ToolsState>((set, get) => ({
     set({ tools: [item, ...get().tools], error: null });
     pushOptimisticToServer(item);
     return item;
+  },
+
+  bulkAdd(inputs) {
+    const t = now();
+    const items: Tool[] = [];
+    for (const input of inputs) {
+      const name = String(input.name ?? "").trim();
+      if (!name) continue;
+      items.push({
+        id: uuid(),
+        createdAt: t,
+        updatedAt: t,
+        name,
+        brand: String(input.brand ?? "").trim() || undefined,
+        category: input.category ?? "other",
+        condition: input.condition ?? "good",
+        qty: typeof input.qty === "number" ? input.qty : undefined,
+        location: String(input.location ?? "").trim() || undefined,
+        note: String(input.note ?? "").trim() || undefined,
+        purchasedAt: input.purchasedAt || undefined,
+        imageDataUrl: input.imageDataUrl || undefined,
+        imageUrl: input.imageUrl || undefined,
+      });
+    }
+    if (items.length === 0) return [];
+    set({ tools: [...items, ...get().tools], error: null });
+    for (const it of items) pushOptimisticToServer(it);
+    return items;
   },
 
   update(id, patch) {
