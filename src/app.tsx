@@ -14,6 +14,10 @@ import { DetailPage } from "@/pages/detail";
 import { EditPage } from "@/pages/edit";
 import { SettingsPage } from "@/pages/settings";
 import { NotFoundPage } from "@/pages/not-found";
+import { ToolsListPage } from "@/pages/tools-list";
+import { ToolsAddPage } from "@/pages/tools-add";
+import { ToolsDetailPage } from "@/pages/tools-detail";
+import { ToolsEditPage } from "@/pages/tools-edit";
 
 function ProtectedShell() {
   const { user, initialized } = useAuth();
@@ -41,6 +45,10 @@ export default function App() {
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/item/:id" element={<DetailPage />} />
             <Route path="/item/:id/edit" element={<EditPage />} />
+            <Route path="/tools" element={<ToolsListPage />} />
+            <Route path="/tools/add" element={<ToolsAddPage />} />
+            <Route path="/tools/:id" element={<ToolsDetailPage />} />
+            <Route path="/tools/:id/edit" element={<ToolsEditPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
