@@ -120,15 +120,26 @@ async function lookupYahoo(jan: string, appid: string): Promise<ProviderResult |
   };
 }
 
-async function lookupRakuten(jan: string, appid: string): Promise<ProviderResult | null> {
-  const url = new URL("https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601");
+async function lookupRakuten(
+  jan: string,
+  appid: string,
+  accessKey: string,
+  origin: string,
+): Promise<ProviderResult | null> {
+  // 2026-05-14 以降の新エンドポイント。旧 app.rakuten.co.jp は廃止。
+  const url = new URL("https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260401");
   url.searchParams.set("applicationId", appid);
   url.searchParams.set("keyword", jan);
   url.searchParams.set("hits", "3");
   url.searchParams.set("formatVersion", "2");
 
   const res = await fetch(url.toString(), {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      accessKey,
+      Origin: origin,
+      Referer: origin,
+    },
     signal: AbortSignal.timeout(5_000),
   });
   if (!res.ok) throw new Error(`rakuten ${res.status}`);
@@ -175,8 +186,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const yahooKey = process.env.YAHOO_APP_ID;
+
+  // 新 Rakuten API: applicationId + accessKey + Origin/Referer 3点セット必須。
   const rakutenKey = process.env.RAKUTEN_APP_ID;
-  if (!yahooKey && !rakutenKey) {
+  const rakutenAccessKey = process.env.RAKUTEN_ACCESS_KEY;
+  const rakutenOrigin =
+    process.env.RAKUTEN_ORIGIN ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "");
+  const rakutenReady = !!(rakutenKey && rakutenAccessKey && rakutenOrigin);
+
+  if (!yahooKey && !rakutenReady) {
     return res
       .status(503)
       .json({ ok: false, error: "no provider configured" });
@@ -196,9 +219,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  if (rakutenKey) {
+  if (rakutenReady) {
     try {
-      const r = await lookupRakuten(barcode, rakutenKey);
+      const r = await lookupRakuten(barcode, rakutenKey!, rakutenAccessKey!, rakutenOrigin);
       if (r) {
         res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
         return res.status(200).json({ ok: true, found: true, ...r });

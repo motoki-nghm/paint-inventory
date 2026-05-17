@@ -223,9 +223,13 @@ async function fetchYahoo(
 async function fetchRakuten(
   query: string,
   appid: string,
+  accessKey: string,
+  origin: string,
   hits = 20,
 ): Promise<RawHit[]> {
-  const url = new URL("https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601");
+  // 2026-05 以降の新エンドポイント。旧 app.rakuten.co.jp は 2026-05-14 廃止。
+  // 認証は applicationId(クエリ) + accessKey(ヘッダ) + Origin/Referer(登録ドメインと一致)。
+  const url = new URL("https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260401");
   url.searchParams.set("applicationId", appid);
   url.searchParams.set("keyword", query);
   url.searchParams.set("hits", String(hits));
@@ -234,7 +238,12 @@ async function fetchRakuten(
   url.searchParams.set("imageFlag", "1");
 
   const res = await fetch(url.toString(), {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      accessKey,
+      Origin: origin,
+      Referer: origin,
+    },
     signal: AbortSignal.timeout(5_000),
   });
   if (!res.ok) throw new Error(`rakuten ${res.status}`);
@@ -345,8 +354,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const yahooKey = process.env.YAHOO_APP_ID;
+
+  // 新 Rakuten API (2026-05-14 以降) は applicationId + accessKey + Origin/Referer が必須。
+  // 3点セット揃わなければ Rakuten 呼び出し自体をスキップ (Yahoo のみで運用)。
   const rakutenKey = process.env.RAKUTEN_APP_ID;
-  if (!yahooKey && !rakutenKey) {
+  const rakutenAccessKey = process.env.RAKUTEN_ACCESS_KEY;
+  const rakutenOrigin =
+    process.env.RAKUTEN_ORIGIN ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "");
+  const rakutenReady = !!(rakutenKey && rakutenAccessKey && rakutenOrigin);
+
+  if (!yahooKey && !rakutenReady) {
     return res.status(503).json({ ok: false, error: "no provider configured" });
   }
 
@@ -374,9 +396,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           errors.push(`yahoo[${q}]: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
-      if (rakutenKey) {
+      if (rakutenReady) {
         try {
-          const hits = await fetchRakuten(q, rakutenKey, 20);
+          const hits = await fetchRakuten(q, rakutenKey!, rakutenAccessKey!, rakutenOrigin, 20);
           rakutenCount += hits.length;
           for (const h of hits) {
             const row = normalizeHit(h, spec.category, q);
